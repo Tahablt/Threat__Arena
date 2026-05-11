@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea85c058ea8b50e4f9f727148a52ee84, type: 3}
+  m_Name: Zone
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  id: zone_01
+  itemType: 2
+  itemName: Zone
+  description: "\xC7evredeki d\xFC\u015Fmanlara hasar verir"
+  rarity: 1
+  icon: {fileID: -2494195361460513285, guid: 6eda80b050ad0ff4da2a01397720cc39, type: 3}
