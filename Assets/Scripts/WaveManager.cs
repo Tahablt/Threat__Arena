@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using TMPro; // YENİ: TextMeshPro kütüphanesini ekledik
 
 [System.Serializable]
 public class Wave
@@ -7,8 +8,7 @@ public class Wave
     public string waveName;
     public int enemyCount;
     public float spawnRate;
-
-    public EnemyType[] allowedEnemies; // A�ILIR MEN� L�STES�
+    public EnemyType[] allowedEnemies;
 }
 
 public class WaveManager : MonoBehaviour
@@ -16,31 +16,87 @@ public class WaveManager : MonoBehaviour
     public Wave[] waves;
     public Transform[] spawnPoints;
 
+    [Header("Arayüz (UI) Ayarları")]
+    public TextMeshProUGUI timerText; // YENİ: Ekrana süreyi yazdıracağımız Text referansı
+
     private int currentWaveIndex = 0;
     private int enemiesAlive = 0;
 
+    private float gameTimer = 0f;
+    private bool isHordeModeActive = false;
+
     private void Start()
     {
-        StartCoroutine(StartWave());
+        StartCoroutine(SpawnRoutine());
     }
 
-    IEnumerator StartWave()
+    private void Update()
+    {
+        // 1. Zamanı saniye cinsinden saydır
+        gameTimer += Time.deltaTime;
+
+        // YENİ: 2. Ekranda süreyi güncelle (Dakika:Saniye formatında)
+        UpdateTimerUI();
+
+        // 3. Dakika 4 (240 Saniye) Kontrolü - Sürü Başlangıcı
+        if (gameTimer >= 240f && !isHordeModeActive)
+        {
+            TriggerHordeMode();
+        }
+
+        // 4. Dalgaları otomatik atlat
+        if (!isHordeModeActive && waves.Length > 0)
+        {
+            currentWaveIndex = Mathf.FloorToInt(gameTimer / 60f);
+            currentWaveIndex = Mathf.Clamp(currentWaveIndex, 0, waves.Length - 1);
+        }
+    }
+
+    // YENİ: Süreyi ekrana yazdıran fonksiyon
+    void UpdateTimerUI()
+    {
+        if (timerText != null)
+        {
+            // Toplam saniyeyi dakika ve saniyeye böl
+            int minutes = Mathf.FloorToInt(gameTimer / 60F);
+            int seconds = Mathf.FloorToInt(gameTimer - minutes * 60);
+
+            // "00:00" formatında yazdır (Örn: 03:05, 04:20)
+            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+        }
+    }
+
+    IEnumerator SpawnRoutine()
     {
         yield return new WaitForSeconds(2f);
 
-        if (currentWaveIndex >= waves.Length)
+        while (true)
         {
-            Debug.Log("T�m dalgalar bitti! Oyuncu Kazand�!");
-            yield break;
-        }
+            if (waves.Length == 0) yield break;
 
-        Wave currentWave = waves[currentWaveIndex];
+            Wave currentWave = waves[currentWaveIndex];
+            int spawnAmount = isHordeModeActive ? 3 : 1;
 
-        for (int i = 0; i < currentWave.enemyCount; i++)
-        {
-            SpawnEnemy(currentWave);
-            yield return new WaitForSeconds(1f / currentWave.spawnRate);
+            for (int i = 0; i < spawnAmount; i++)
+            {
+                SpawnEnemy(currentWave);
+            }
+
+            float delay = 1f / currentWave.spawnRate;
+            if (isHordeModeActive) delay /= 2f;
+
+            yield return new WaitForSeconds(delay);
         }
+    }
+
+    void TriggerHordeMode()
+    {
+        isHordeModeActive = true;
+        Debug.Log("4. DAKİKA DOLDU! SÜRÜ GELİYOR!");
+        currentWaveIndex = waves.Length - 1;
+
+        // Opsiyonel: 4. Dakika geldiğinde süre yazısı kırmızı olsun
+        if (timerText != null) timerText.color = Color.red;
     }
 
     void SpawnEnemy(Wave currentWave)
@@ -55,14 +111,11 @@ public class WaveManager : MonoBehaviour
         if (spawnPoints != null && spawnPoints.Length > 0)
         {
             Transform randomSpawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-            
-            // Dusmanlarin ayni noktada ust uste binmesini ve fizikten dolayi havaya firlamasini engellemek icin offset
             Vector2 randomSpread = Random.insideUnitCircle * 1.5f;
 
-            // Havadan dusmelerini engellemek icin Y = 0.5f veriyoruz (ayni zamanda yerin icine girip firlamamalari icin)
             enemy.transform.position = new Vector3(
-                randomSpawnPoint.position.x + randomSpread.x, 
-                0.5f, 
+                randomSpawnPoint.position.x + randomSpread.x,
+                0.5f,
                 randomSpawnPoint.position.z + randomSpread.y
             );
             enemy.transform.rotation = randomSpawnPoint.rotation;
@@ -74,12 +127,6 @@ public class WaveManager : MonoBehaviour
     public void OnEnemyDefeated()
     {
         enemiesAlive--;
-
-        if (enemiesAlive <= 0)
-        {
-            enemiesAlive = 0;
-            currentWaveIndex++;
-            StartCoroutine(StartWave());
-        }
+        if (enemiesAlive < 0) enemiesAlive = 0;
     }
 }

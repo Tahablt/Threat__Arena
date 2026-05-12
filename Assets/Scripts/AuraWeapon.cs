@@ -3,48 +3,51 @@ using System.Collections.Generic;
 
 public class AuraWeapon : MonoBehaviour
 {
+    [Header("Aura Ayarları")]
     public float damage = 10f;
     public float damageInterval = 0.5f;
-    public float auraRange = 3f;
+    public float auraRange = 3f; // Bu değer Transform Scale'ini belirleyecek
 
     private float timer;
     private List<Enemy> enemiesInRange = new List<Enemy>();
 
     void OnEnable()
     {
-        // Obje açıldığında listeyi temizle ve boyutu ayarla
         enemiesInRange.Clear();
         UpdateAuraScale();
-        Debug.Log("Aura Objesi Aktif Edildi!");
     }
 
     void Update()
     {
+        // 1. Hasar Zamanlayıcısı
         timer += Time.deltaTime;
         if (timer >= damageInterval)
         {
             ApplyAuraDamage();
-            timer = 0;
+            timer = 0f;
         }
+
+        // 2. Görseli Döndürme (Eğer Sprite Kullanırsan Diye Ufak Bir Eklenti)
+        // Eğer görselin dönmesini istemiyorsan bu satırı silebilirsin.
+        transform.Rotate(Vector3.forward * 100f * Time.deltaTime);
     }
 
     void ApplyAuraDamage()
     {
-        if (enemiesInRange.Count > 0)
-        {
-            Debug.Log("Menzildeki düşman sayısı: " + enemiesInRange.Count);
-        }
-
+        // Listeyi sondan başa doğru tarıyoruz (Çünkü içeriden eleman siliyoruz)
         for (int i = enemiesInRange.Count - 1; i >= 0; i--)
         {
-            if (enemiesInRange[i] != null && enemiesInRange[i].gameObject.activeInHierarchy)
-            {
-                enemiesInRange[i].TakeDamage(damage);
-            }
-            else
+            Enemy currentEnemy = enemiesInRange[i];
+
+            // Düşman tamamen silinmişse VEYA havuza geri gönderilmişse (kapanmışsa) listeden çıkar
+            if (currentEnemy == null || !currentEnemy.gameObject.activeInHierarchy)
             {
                 enemiesInRange.RemoveAt(i);
+                continue; // Bir sonraki düşmana geç
             }
+
+            // Düşman hayattaysa hasar ver
+            currentEnemy.TakeDamage(damage);
         }
     }
 
@@ -56,32 +59,28 @@ public class AuraWeapon : MonoBehaviour
 
     private void UpdateAuraScale()
     {
+        // Auranın hem görselinin hem de Sphere Collider'ının büyümesini sağlar
         transform.localScale = new Vector3(auraRange, auraRange, auraRange);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Enemy"))
+        // "Enemy" tag'i kullanmak yerine doğrudan Enemy bileşenini aramak daha güvenlidir.
+        Enemy enemy = other.GetComponent<Enemy>();
+
+        if (enemy != null && !enemiesInRange.Contains(enemy))
         {
-            Enemy enemy = other.GetComponent<Enemy>();
-            if (enemy != null && !enemiesInRange.Contains(enemy))
-            {
-                enemiesInRange.Add(enemy);
-                Debug.Log("Düşman auraya girdi: " + other.name);
-            }
+            enemiesInRange.Add(enemy);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Enemy"))
+        Enemy enemy = other.GetComponent<Enemy>();
+
+        if (enemy != null && enemiesInRange.Contains(enemy))
         {
-            Enemy enemy = other.GetComponent<Enemy>();
-            if (enemy != null)
-            {
-                enemiesInRange.Remove(enemy);
-                Debug.Log("Düşman auradan çıktı.");
-            }
+            enemiesInRange.Remove(enemy);
         }
     }
 }
