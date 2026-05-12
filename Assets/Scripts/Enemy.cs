@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections; // Coroutine (Zamanlayıcı) için gerekli
 
 public enum EnemyType { Slime, Turtle }
 
@@ -18,6 +19,10 @@ public class Enemy : MonoBehaviour, IDamageable
     [Header("XP Ayarlari")]
     public GameObject xpPrefab;
 
+    [Header("Vurus Hissiyati (Hit Flash)")]
+    public Color hitColor = Color.darkRed;      // Hasar yiyince bürüneceği renk
+    public float flashDuration = 0.15f;     // Kırmızı kalma süresi
+
     private float currentHealth;
     private bool isDead = false;
     private Transform player;
@@ -26,6 +31,11 @@ public class Enemy : MonoBehaviour, IDamageable
     private Animator anim;
     private WaveManager waveManager;
     private Rigidbody rb;
+
+    // --- HIT FLASH DEĞİŞKENLERİ ---
+    private Renderer[] meshRenderers;
+    private Color[] originalColors;
+    private Coroutine flashCoroutine;
 
     private void Awake()
     {
@@ -48,6 +58,19 @@ public class Enemy : MonoBehaviour, IDamageable
             rb.angularDamping = 5f;
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         }
+
+        // --- RENDERER VE ORİJİNAL RENKLERİ HAFIZAYA AL ---
+        meshRenderers = GetComponentsInChildren<Renderer>();
+        originalColors = new Color[meshRenderers.Length];
+
+        for (int i = 0; i < meshRenderers.Length; i++)
+        {
+            // Eğer materyalin bir ana rengi (_Color) varsa onu kaydet
+            if (meshRenderers[i].material.HasProperty("_Color"))
+            {
+                originalColors[i] = meshRenderers[i].material.color;
+            }
+        }
     }
 
     private void OnEnable()
@@ -62,6 +85,9 @@ public class Enemy : MonoBehaviour, IDamageable
         }
 
         if (anim != null) anim.SetBool("isMoving", true);
+
+        // --- HAVUZDAN DOĞARKEN RENGİ SIFIRLA (Kırmızı doğmasını engeller) ---
+        ResetColor();
     }
 
     private void Update()
@@ -112,9 +138,44 @@ public class Enemy : MonoBehaviour, IDamageable
 
         currentHealth -= damage;
 
+        // --- KIRMIZI PARLAMA EFEKTİNİ BAŞLAT ---
+        if (flashCoroutine != null) StopCoroutine(flashCoroutine); // Üst üste vurulursa eskisini iptal et
+        flashCoroutine = StartCoroutine(FlashRoutine());
+
         if (currentHealth <= 0)
         {
             Die();
+        }
+    }
+
+    // --- ZAMANLAYICI: RENGİ DEĞİŞTİR VE GERİ AL ---
+    private IEnumerator FlashRoutine()
+    {
+        // 1. Tüm parçaları kırmızı yap
+        for (int i = 0; i < meshRenderers.Length; i++)
+        {
+            if (meshRenderers[i].material.HasProperty("_Color"))
+            {
+                meshRenderers[i].material.color = hitColor;
+            }
+        }
+
+        // 2. Belirlenen süre kadar bekle (0.15 saniye)
+        yield return new WaitForSeconds(flashDuration);
+
+        // 3. Orijinal renklerine geri döndür
+        ResetColor();
+    }
+
+    // --- RENK SIFIRLAMA FONKSİYONU ---
+    private void ResetColor()
+    {
+        for (int i = 0; i < meshRenderers.Length; i++)
+        {
+            if (meshRenderers[i].material.HasProperty("_Color"))
+            {
+                meshRenderers[i].material.color = originalColors[i];
+            }
         }
     }
 
@@ -123,12 +184,10 @@ public class Enemy : MonoBehaviour, IDamageable
         if (isDead) return;
         isDead = true;
 
-        // --- ÖLDÜRÜLEN MOB SAYISINI ARTIR ---
         if (KillManager.Instance != null)
         {
             KillManager.Instance.AddKill();
         }
-        // -----------------------------------
 
         if (XPPool.Instance != null && (xpPrefab != null || XPPool.Instance.xpPrefab != null))
         {
@@ -154,6 +213,9 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void ReturnToPool()
     {
+        // Havuza dönerken de ne olur ne olmaz rengini sıfırlayalım
+        ResetColor();
+
         if (EnemyPool.Instance != null)
         {
             EnemyPool.Instance.ReturnEnemy(this.gameObject, myType);

@@ -4,6 +4,8 @@ using System.Collections;
 
 public class Character : MonoBehaviour
 {
+    // ... (Üst kýsýmdaki Movement, Dash ve Combat Settings ayný kalýyor) ...
+
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float rotationSpeed = 10f;
@@ -15,7 +17,7 @@ public class Character : MonoBehaviour
     [SerializeField] private float dashInvincibilityDuration = 0.5f;
 
     [Header("Combat Settings")]
-    public float attackDamage = 10f; // Dýþarýdan artýrýlabilir hasar
+    public float attackDamage = 10f;
 
     [Header("References")]
     [SerializeField] private FixedJoystick movementJoystick;
@@ -67,8 +69,7 @@ public class Character : MonoBehaviour
         if (fireButton != null) fireButton.onClick.AddListener(OnFireButtonPressed);
     }
 
-    // --- UPGRADE FONKSÝYONLARI (UpgradeManager Burayý Çaðýracak) ---
-
+    // --- UPGRADE FONKSÝYONLARI ---
     public void IncreaseDamage(float amount)
     {
         attackDamage += amount;
@@ -78,17 +79,15 @@ public class Character : MonoBehaviour
     public void IncreaseMoveSpeed(float amount)
     {
         moveSpeed += amount;
-        currentSpeed = moveSpeed; // Anlýk hýzý da güncelle
+        currentSpeed = moveSpeed;
         Debug.Log("Hareket Hýzý Arttý: " + moveSpeed);
     }
 
     public void ReduceDashCooldown(float amount)
     {
-        dashCooldown = Mathf.Max(0.2f, dashCooldown - amount); // 0.2 saniyenin altýna düþmesin
+        dashCooldown = Mathf.Max(0.2f, dashCooldown - amount);
         Debug.Log("Dash Bekleme Süresi Azaldý: " + dashCooldown);
     }
-
-    // -------------------------------------------------------------
 
     void Update()
     {
@@ -220,6 +219,7 @@ public class Character : MonoBehaviour
         OnDashEnd?.Invoke();
     }
 
+    // --- DÜZENLENEN SALDIRI BÖLÜMÜ ---
     void HandleFire()
     {
         if (fireInput)
@@ -227,8 +227,8 @@ public class Character : MonoBehaviour
             OnFire?.Invoke();
             if (animator != null)
             {
-                int randomAttack = Random.Range(0, 3);
-                animator.SetInteger("AttackIndex", randomAttack);
+                // Artýk Random.Range ve AttackIndex kullanýlmýyor.
+                // Direkt Animator'daki "Attack" tetikleyicisini çalýþtýrýyoruz.
                 animator.SetTrigger("Attack");
             }
             fireInput = false;
