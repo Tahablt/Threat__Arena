@@ -4,8 +4,6 @@ using System.Collections;
 
 public class Character : MonoBehaviour
 {
-    // ... (Üst kýsýmdaki Movement, Dash ve Combat Settings ayný kalýyor) ...
-
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float rotationSpeed = 10f;
@@ -18,6 +16,10 @@ public class Character : MonoBehaviour
 
     [Header("Combat Settings")]
     public float attackDamage = 10f;
+
+    // --- YENÝ EKLENEN KISIM: VFX Ölçek Ayarý ---
+    public float vfxScaleMultiplier = 1f; // Baþlangýç kýlýç boyutu
+    // ------------------------------------------
 
     [Header("References")]
     [SerializeField] private FixedJoystick movementJoystick;
@@ -88,6 +90,14 @@ public class Character : MonoBehaviour
         dashCooldown = Mathf.Max(0.2f, dashCooldown - amount);
         Debug.Log("Dash Bekleme Süresi Azaldý: " + dashCooldown);
     }
+
+    // --- YENÝ EKLENEN KISIM: Kýlýç Boyunu Artýrma ---
+    public void IncreaseVFXScale(float amount)
+    {
+        vfxScaleMultiplier += amount;
+        Debug.Log("Kýlýç Boyu Arttý! Yeni Çarpan: " + vfxScaleMultiplier);
+    }
+    // ------------------------------------------------
 
     void Update()
     {
@@ -219,7 +229,6 @@ public class Character : MonoBehaviour
         OnDashEnd?.Invoke();
     }
 
-    // --- DÜZENLENEN SALDIRI BÖLÜMÜ ---
     void HandleFire()
     {
         if (fireInput)
@@ -227,8 +236,6 @@ public class Character : MonoBehaviour
             OnFire?.Invoke();
             if (animator != null)
             {
-                // Artýk Random.Range ve AttackIndex kullanýlmýyor.
-                // Direkt Animator'daki "Attack" tetikleyicisini çalýþtýrýyoruz.
                 animator.SetTrigger("Attack");
             }
             fireInput = false;

@@ -3,22 +3,32 @@ using System.Collections.Generic;
 
 public class VFXDamage : MonoBehaviour
 {
-    [Header("Saldırı Ayarları")]
-    public float damage = 20f;
+    private float currentDamage;
 
     private List<Collider> alreadyHit = new List<Collider>();
 
+    private void Start()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            Character characterScript = player.GetComponent<Character>();
+            if (characterScript != null)
+            {
+                currentDamage = characterScript.attackDamage;
+
+                // --- YENİ EKLENEN KISIM: Kılıç boyutunu karakterden çek ve büyüt ---
+                float mult = characterScript.vfxScaleMultiplier;
+                transform.localScale = transform.localScale * mult;
+                // -------------------------------------------------------------------
+            }
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        // 1. AŞAMA: Fizik çalışıyor mu? (VFX bir şeye fiziksel olarak değiyor mu?)
-        Debug.Log("<color=yellow>VFX ÇARPTI:</color> " + other.gameObject.name);
-
-        // 2. AŞAMA: Tag doğru mu?
         if (other.CompareTag("Enemy"))
         {
-            Debug.Log("<color=green>TAG DOĞRU!</color> Düşman tag'i algılandı.");
-
-            // 3. AŞAMA: Enemy scriptini bulabiliyor mu? 
             Enemy enemy = other.GetComponent<Enemy>();
             if (enemy == null)
             {
@@ -29,19 +39,10 @@ public class VFXDamage : MonoBehaviour
             {
                 if (!alreadyHit.Contains(other))
                 {
-                    Debug.Log("<color=cyan>BAŞARILI!</color> Hasar veriliyor: " + enemy.gameObject.name);
-                    enemy.TakeDamage(damage);
+                    enemy.TakeDamage(currentDamage);
                     alreadyHit.Add(other);
                 }
             }
-            else
-            {
-                Debug.Log("<color=red>HATA:</color> Objenin Tag'i Enemy ama üzerinde Enemy scripti YOK!");
-            }
-        }
-        else
-        {
-            Debug.Log("<color=orange>UYARI:</color> Çarpılan objenin Tag'i Enemy DEĞİL. Etiket: " + other.tag);
         }
     }
 }

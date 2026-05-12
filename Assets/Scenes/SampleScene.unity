@@ -3971,6 +3971,7 @@ MonoBehaviour:
   maxHealth: 100
   moveSpeed: 3
   stopDistance: 1.5
+  healthIncreasePerMinute: 20
   damageToPlayer: 10
   attackInterval: 1
   xpPrefab: {fileID: 1269374777}
@@ -6055,7 +6056,8 @@ MonoBehaviour:
   dashDuration: 0.2
   dashCooldown: 1
   dashInvincibilityDuration: 0.5
-  attackDamage: 10
+  attackDamage: 100
+  vfxScaleMultiplier: 1
   movementJoystick: {fileID: 595282648}
   dashButton: {fileID: 28961211}
   fireButton: {fileID: 471336990}
@@ -6100,10 +6102,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 323bdb5db16837e40b9a86cc2a348d45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
-  maxHealth: 100
+  maxHealth: 100000
   currentHealth: 0
   healthSlider: {fileID: 1748261363}
   gameOverPanel: {fileID: 488827843}
+  hitColor: {r: 1, g: 0, b: 0, a: 1}
+  flashDuration: 0.15
 --- !u!114 &1545537186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6531,7 +6535,7 @@ GameObject:
   - component: {fileID: 1587068869}
   m_Layer: 3
   m_Name: Floor
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -6943,6 +6947,7 @@ MonoBehaviour:
   maxHealth: 100
   moveSpeed: 3
   stopDistance: 1.5
+  healthIncreasePerMinute: 20
   damageToPlayer: 10
   attackInterval: 1
   xpPrefab: {fileID: 1269374777}

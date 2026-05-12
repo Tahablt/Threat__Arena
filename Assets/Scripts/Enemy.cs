@@ -11,6 +11,12 @@ public class Enemy : MonoBehaviour, IDamageable
     public float moveSpeed = 3f;
     public float stopDistance = 1.2f;
 
+    // --- YENİ EKLENEN KISIM: Zorluk Ayarları ---
+    [Header("Zorluk Ayarlari")]
+    public float healthIncreasePerMinute = 20f; // Her 1 dakikada max cana eklenecek miktar
+    private float baseMaxHealth;                // Havuz bozulmasın diye ilk canı tutacağımız hafıza
+    // -------------------------------------------
+
     [Header("Saldiri Ayarlari")]
     public float damageToPlayer = 10f;
     public float attackInterval = 1f;
@@ -21,7 +27,7 @@ public class Enemy : MonoBehaviour, IDamageable
 
     [Header("Vurus Hissiyati (Hit Flash)")]
     public Color hitColor = Color.darkRed;      // Hasar yiyince bürüneceği renk
-    public float flashDuration = 0.15f;     // Kırmızı kalma süresi
+    public float flashDuration = 0.15f;         // Kırmızı kalma süresi
 
     private float currentHealth;
     private bool isDead = false;
@@ -39,6 +45,9 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void Awake()
     {
+        // İlk baştaki canı güvenli bir yere kaydediyoruz (Object Pool tuzağını engeller)
+        baseMaxHealth = maxHealth;
+
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
@@ -75,7 +84,16 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void OnEnable()
     {
-        currentHealth = maxHealth;
+        // --- ZAMANA GÖRE CAN ARTIRMA SİSTEMİ ---
+        // Oyunun başından beri kaç dakika geçtiğini hesapla
+        float minutesPassed = Time.timeSinceLevelLoad / 60f;
+
+        // Yeni Max Can = Orijinal Can + (Geçen Dakika * Dakika Başına Artış)
+        maxHealth = baseMaxHealth + (minutesPassed * healthIncreasePerMinute);
+
+        currentHealth = maxHealth; // Canı yeni limite göre tam doldur
+        // ---------------------------------------
+
         isDead = false;
         lastAttackTime = 0f;
 
@@ -160,7 +178,7 @@ public class Enemy : MonoBehaviour, IDamageable
             }
         }
 
-        // 2. Belirlenen süre kadar bekle (0.15 saniye)
+        // 2. Belirlenen süre kadar bekle
         yield return new WaitForSeconds(flashDuration);
 
         // 3. Orijinal renklerine geri döndür
