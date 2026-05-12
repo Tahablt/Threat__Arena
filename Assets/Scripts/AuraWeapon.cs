@@ -27,9 +27,7 @@ public class AuraWeapon : MonoBehaviour
             timer = 0f;
         }
 
-        // 2. Görseli Döndürme (Eğer Sprite Kullanırsan Diye Ufak Bir Eklenti)
-        // Eğer görselin dönmesini istemiyorsan bu satırı silebilirsin.
-        transform.Rotate(Vector3.forward * 100f * Time.deltaTime);
+       
     }
 
     void ApplyAuraDamage()
