@@ -14,6 +14,16 @@ public class AttackEffectController : MonoBehaviour
         // Efekti oluştur
         GameObject effect = Instantiate(slashEffectPrefab, spawnPoint.position, spawnPoint.rotation);
 
-        // Opsiyonel: Efekti bir süre sonra koda gerek kalmadan DestroyAfterTime ile silmek daha iyidir
+        // Efektin scale değerini spawnPoint'in scale değerine eşitliyoruz
+        effect.transform.localScale = spawnPoint.localScale;
+
+        /* ÖNEMLİ NOT: 
+        Eğer spawnPoint karakterin bir alt objesiyse (örneğin el kemiğine bağlıysa) 
+        ve karakterinin veya üst objelerin scale değerleri 1'den farklıysa, 
+        dünya koordinatlarındaki gerçek boyutu (world scale) almak için aşağıdaki 
+        kodu kullanman daha sağlıklı sonuç verecektir:
+        
+        effect.transform.localScale = spawnPoint.lossyScale;
+        */
     }
 }

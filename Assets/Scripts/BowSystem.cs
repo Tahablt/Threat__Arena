@@ -3,11 +3,12 @@ using UnityEngine;
 public class BowSystem : MonoBehaviour
 {
     [Header("Ayarlar")]
-    public GameObject arrowPrefab;    // Fırlatılacak ok prefabı
-    public Transform firePoint;       // Okun çıkacağı nokta
-    public float fireRate = 1.5f;     // Kaç saniyede bir ok atılsın?
-    public float range = 10f;         // Düşman arama menzili
-    public float arrowDamage = 10f;   // Okun hasarı
+    public GameObject arrowPrefab;      // Fırlatılacak ok prefabı
+    public Transform firePoint;         // Okun çıkacağı nokta
+    public float fireRate = 1.5f;       // Kaç saniyede bir ok atılsın?
+    public float range = 10f;           // Düşman arama menzili
+    public float arrowDamage = 10f;     // Okun hasarı
+    public float arrowSpeed = 25f;      // YENİ: Okun gidiş hızı (Artık buradan ayarlayacaksın)
 
     private float fireCountdown = 0f;
     private Transform target;
@@ -62,11 +63,11 @@ public class BowSystem : MonoBehaviour
         // Oku oluştur ve hedefe yönelt
         GameObject arrowGO = Instantiate(arrowPrefab, firePoint.position, firePoint.rotation);
 
-        // Okun içindeki script'e hedefi ve hasarı gönder
+        // Okun içindeki script'e hedefi, hasarı ve HIZI gönder
         Arrow arrow = arrowGO.GetComponent<Arrow>();
         if (arrow != null)
         {
-            arrow.Seek(target, arrowDamage);
+            arrow.Seek(target, arrowDamage, arrowSpeed);
         }
     }
 }

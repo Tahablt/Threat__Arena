@@ -14,6 +14,12 @@ public class UpgradeManager : MonoBehaviour
     public PlayerHealth playerHealth;
     public Character playerCharacter;
 
+    [Header("Kılıç Büyüme Ayarları")]
+    [Tooltip("Büyümesini istediğin kılıç nesnesini buraya sürükle.")]
+    public Transform swordTransform;
+    [Tooltip("Kılıç her seçildiğinde X, Y ve Z ekseninde ne kadar büyüyecek?")]
+    public float scaleSize = 0.2f;
+
     private List<ItemData> rastgeleItemler;
 
     private void Start()
@@ -63,8 +69,19 @@ public class UpgradeManager : MonoBehaviour
                 break;
 
             case ItemTypes.Sword:
-                // Kılıç hasarını artır (Kılıç zaten elde duruyor)
+                // Kılıç hasarını artır
                 if (playerCharacter != null) playerCharacter.IncreaseDamage(5f);
+
+                // Kılıcın boyutunu (scale) artır
+                if (swordTransform != null)
+                {
+                    swordTransform.localScale += new Vector3(scaleSize, scaleSize, scaleSize);
+                    Debug.Log("Kılıç büyütüldü! Yeni Boyut: " + swordTransform.localScale);
+                }
+                else
+                {
+                    Debug.LogWarning("DİKKAT: Büyütülecek kılıç nesnesi (swordTransform) Inspector'da atanmamış!");
+                }
                 break;
 
             case ItemTypes.Zone:
@@ -79,14 +96,13 @@ public class UpgradeManager : MonoBehaviour
 
             case ItemTypes.Bow:
                 // Megabonk Mantığı: Kılıç durur, Ok sistemi ek yetenek olarak açılır
-                // Karakterin üzerinde "BowSystem" adında bir script olduğunu varsayıyoruz
                 BowSystem bow = playerCharacter.GetComponentInChildren<BowSystem>(true);
 
                 if (bow != null)
                 {
                     if (!bow.gameObject.activeSelf)
                     {
-                        // İlk alımda ok sistemini çalıştır (otomatik ateş etmeye başlar)
+                        // İlk alımda ok sistemini çalıştır
                         bow.gameObject.SetActive(true);
                         Debug.Log("Ok Sistemi Aktif Edildi! Otomatik ateş başlıyor.");
                     }
