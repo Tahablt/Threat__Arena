@@ -42,4 +42,11 @@ public class XPMagnet : MonoBehaviour
             transform.position = Vector3.MoveTowards(transform.position, playerTransform.position, magnetSpeed * Time.deltaTime);
         }
     }
+    // Mıknatıs eşyası alındığında bu fonksiyon dışarıdan tetiklenecek
+    public void StartGlobalMagnet(Transform player)
+    {
+        playerTransform = player;
+        isFollowing = true;
+        magnetSpeed = 25f; // Mıknatıs eşyasıyla çekilince roket gibi hızlı gelsinler!
+    }
 }

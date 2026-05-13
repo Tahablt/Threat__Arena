@@ -43,11 +43,12 @@ public class PlayerXP : MonoBehaviour
     {
         currentXP -= xpToNextLevel;
         currentLevel++;
-        xpToNextLevel = Mathf.Round(xpToNextLevel * 1.2f);
+
+        // YENİ FORMÜL: Çarpanı %5'e düşürüp, sabit 20 ekliyoruz. Oyun sonuna kadar akıcı ilerler.
+        xpToNextLevel = Mathf.Round(xpToNextLevel * 1.05f) + 20f;
 
         Debug.Log("LEVEL UP! Yeni Seviye: " + currentLevel);
 
-        // Upgrade menüsünü aç
         if (upgradeManager != null)
         {
             upgradeManager.ShowUpgradeMenu();

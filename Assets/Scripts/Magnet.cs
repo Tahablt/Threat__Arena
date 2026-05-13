@@ -37,6 +37,11 @@ public class Magnet : MonoBehaviour
         {
             isCollected = true;
 
+            // --- YENİ EKLENEN KISIM ---
+            // DOTween InOutElastic eksi değere düştüğünde BoxCollider hata vermesin diye çarpışmayı kapatıyoruz.
+            GetComponent<Collider>().enabled = false;
+            // --------------------------
+
             GameObject xPool = GameObject.Find(poolObjectName);
             if (xPool != null)
             {
@@ -65,27 +70,25 @@ public class Magnet : MonoBehaviour
     {
         xp.DOKill();
 
+        // 1. XP'nin havuzdaki gerçek orijinal boyutunu hafızaya alıyoruz
+        Vector3 originalScale = xp.localScale;
+
         // Oyuncuyu takip etmesi için önce player'ın child'ı yapıyoruz
-        // worldPositionStays: true sayesinde yerinden zıplamaz
         xp.SetParent(player, true);
 
         Sequence xpSequence = DOTween.Sequence();
 
-        // 1. Gecikme ekle (Hepsini aynı anda başlatmaz)
         xpSequence.AppendInterval(delay);
-
-        // 2. Hareket animasyonu (LocalMove kullanarak oyuncunun kafasına hedefler)
-        xpSequence.Append(xp.DOLocalMove(new Vector3(0, targetYOffset, 0), xpMoveDuration)
-            .SetEase(Ease.OutQuad)); // OutQuad daha yumuşak bir yavaşlama sağlar
-
-        // 3. Küçülme animasyonu
+        xpSequence.Append(xp.DOLocalMove(new Vector3(0, targetYOffset, 0), xpMoveDuration).SetEase(Ease.OutQuad));
         xpSequence.Join(xp.DOScale(Vector3.zero, xpScaleDuration).SetDelay(xpMoveDuration * 0.7f));
 
         xpSequence.OnComplete(() =>
         {
             xp.gameObject.SetActive(false);
             xp.SetParent(poolRoot);
-            xp.localScale = Vector3.one;
+
+            // 2. Vector3.one YERİNE, kaydettiğimiz gerçek boyutuna geri döndürüyoruz!
+            xp.localScale = originalScale;
         });
     }
 

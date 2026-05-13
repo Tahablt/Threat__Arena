@@ -21,6 +21,12 @@ public class Character : MonoBehaviour
     public float vfxScaleMultiplier = 1f; // Baþlangýç kýlýç boyutu
     // ------------------------------------------
 
+    // --- YENÝ EKLENEN KISIM: Ses Ayarlarý ---
+    [Header("Audio Settings")]
+    public AudioSource audioSource;      // Sesi çalacak alet (Hoparlör)
+    public AudioClip swordSwingSound;    // Çalýnacak kýlýç sesi dosyasý (Swoosh)
+    // ----------------------------------------
+
     [Header("References")]
     [SerializeField] private FixedJoystick movementJoystick;
     [SerializeField] private Button dashButton;
@@ -238,6 +244,14 @@ public class Character : MonoBehaviour
             {
                 animator.SetTrigger("Attack");
             }
+
+            // --- YENÝ EKLENEN KISIM: SESÝ ÇAL ---
+            if (audioSource != null && swordSwingSound != null)
+            {
+                audioSource.PlayOneShot(swordSwingSound);
+            }
+            // ------------------------------------
+
             fireInput = false;
         }
     }

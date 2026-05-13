@@ -4,55 +4,40 @@ public class Arrow : MonoBehaviour
 {
     private Transform target;
     private float damage;
+    private float speed;
+    public float lifeTime = 5f;
+    private float counter;
 
-    [Header("Ok Ayarları")]
-    public float speed; // Bu değer artık Unity Inspector yerine BowSystem'den atanacak
-    public float lifeTime = 5f; // Ok bir yere çarpamazsa 5 saniye sonra yok olsun
-
-    float counter;
-
-    void Start()
-    {
-        // Belleği şişirmemek için güvenlik önlemi
-        //Destroy(gameObject, lifeTime);
-    }
-
-    // BowSystem'den gelen hedef, hasar ve HIZ bilgisi
     public void Seek(Transform _target, float _damage, float _speed)
     {
         target = _target;
         damage = _damage;
-        speed = _speed; // BowSystem'den gelen hızı okun hızına eşitliyoruz
+        speed = _speed;
+        counter = 0f; // Havuzdan çıkınca zamanlayıcıyı sıfırla
 
-        // Ok doğduğu an hedefe doğru dönsün
-        if (target != null)
-        {
-            transform.LookAt(target);
-        }
+        if (target != null) transform.LookAt(target);
     }
 
     void Update()
     {
-        // Hedef daha ok havadayken öldüyse oku yok et
-        if (target == null)
+        // Hedef yoksa veya süre dolduysa havuza dön
+        if (target == null || !target.gameObject.activeInHierarchy)
         {
-            Destroy(gameObject);
+            ArrowPool.Instance.ReturnArrow(gameObject);
             return;
         }
 
         counter += Time.deltaTime;
         if (counter > lifeTime)
         {
-            Destroy(gameObject);
+            ArrowPool.Instance.ReturnArrow(gameObject);
             return;
         }
 
-        // Hedefe doğru ilerleme
         float step = speed * Time.deltaTime;
         transform.position = Vector3.MoveTowards(transform.position, target.position, step);
         transform.LookAt(target);
 
-        // Hedefe yeterince yaklaştık mı? (0.2f mesafe çarpışma sayılır)
         if (Vector3.Distance(transform.position, target.position) <= 0.2f)
         {
             HitTarget();
@@ -61,22 +46,15 @@ public class Arrow : MonoBehaviour
 
     void HitTarget()
     {
-        // 1. Düşmanın üzerindeki "Enemy" scriptini buluyoruz
         Enemy enemy = target.GetComponent<Enemy>();
+        if (enemy == null) enemy = target.GetComponentInParent<Enemy>();
 
         if (enemy != null)
         {
-            // 2. Enemy scriptindeki TakeDamage fonksiyonunu çalıştırıp canını azaltıyoruz!
             enemy.TakeDamage(damage);
-
-            Debug.Log("<color=green>Ok isabet etti!</color> Vurulan: " + target.name + " | Hasar: " + damage);
-        }
-        else
-        {
-            Debug.LogWarning("<color=orange>Ok çarptı ama " + target.name + " objesinde 'Enemy' scripti BULUNAMADI!</color>");
         }
 
-        // Çarptıktan sonra oku yokediyoruz
-        Destroy(gameObject);
+        // Çarptıktan sonra havuza geri gönder
+        ArrowPool.Instance.ReturnArrow(gameObject);
     }
 }

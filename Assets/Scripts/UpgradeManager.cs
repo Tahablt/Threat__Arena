@@ -69,10 +69,16 @@ public class UpgradeManager : MonoBehaviour
                 break;
 
             case ItemTypes.Sword:
-                // Kılıç hasarını artır
-                if (playerCharacter != null) playerCharacter.IncreaseDamage(5f);
+                if (playerCharacter != null)
+                {
+                    // 1. Kılıç hasarını artır
+                    playerCharacter.IncreaseDamage(5f);
 
-                // Kılıcın boyutunu (scale) artır
+                    // 2. YENİ: Mavi VFX kılıç efektini büyüt!
+                    playerCharacter.IncreaseVFXScale(0.15f);
+                }
+
+                // Kılıcın fiziksel boyutunu (scale) artır
                 if (swordTransform != null)
                 {
                     swordTransform.localScale += new Vector3(scaleSize, scaleSize, scaleSize);
@@ -108,10 +114,12 @@ public class UpgradeManager : MonoBehaviour
                     }
                     else
                     {
-                        // Tekrar seçilirse okların hızını veya hasarını artır
-                        bow.fireRate -= 0.1f; // Daha hızlı ateş et
-                        bow.arrowDamage += 3f; // Daha çok hasar ver
-                        Debug.Log("Ok Atış Hızı ve Hasarı Geliştirildi!");
+                        // YENİ: Tekrar seçilirse hızı, hasarı artır VE OK SAYISINI 1 EKLE!
+                        bow.fireRate = Mathf.Max(0.2f, bow.fireRate - 0.05f); // Sınır koyduk, çok abartı hızlanmasın
+                        bow.arrowDamage += 3f;
+                        bow.arrowsPerShot += 1; // Ekstra ok atma yeteneği!
+
+                        Debug.Log("Ok Geliştirildi! Yeni Ok Sayısı: " + bow.arrowsPerShot);
                     }
                 }
                 else

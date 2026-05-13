@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections; // Coroutine için eklendi
 
 public class BowSystem : MonoBehaviour
 {
@@ -8,23 +9,36 @@ public class BowSystem : MonoBehaviour
     public float fireRate = 1.5f;       // Kaç saniyede bir ok atılsın?
     public float range = 10f;           // Düşman arama menzili
     public float arrowDamage = 10f;     // Okun hasarı
-    public float arrowSpeed = 25f;      // YENİ: Okun gidiş hızı (Artık buradan ayarlayacaksın)
+    public float arrowSpeed = 25f;      // Okun gidiş hızı
+
+    // --- YENİ EKLENEN KISIM: Çoklu Ok Ayarları ---
+    public int arrowsPerShot = 1;       // Tek seferde atılacak ok sayısı
+    public float timeBetweenArrows = 0.15f; // Okların peş peşe çıkma süresi
+    // ---------------------------------------------
+
+    [Header("Ses Ayarlari")]
+    public AudioClip bowFireSound;      // Ok fırlatma sesi
+    private AudioSource audioSource;    // Karakterdeki hoparlör
 
     private float fireCountdown = 0f;
     private Transform target;
 
+    void Start()
+    {
+        audioSource = GetComponentInParent<AudioSource>();
+    }
+
     void Update()
     {
-        // Hedef yoksa veya hedef menzil dışındaysa yeni hedef ara
         if (target == null || Vector3.Distance(transform.position, target.position) > range)
         {
             FindNearestEnemy();
         }
 
-        // Ateş etme zamanı geldiyse ve hedef varsa
         if (fireCountdown <= 0f && target != null)
         {
-            Shoot();
+            // Artık Shoot() yerine zamanlayıcılı Seri Atış fonksiyonunu başlatıyoruz
+            StartCoroutine(ShootBurst());
             fireCountdown = 1f / fireRate;
         }
 
@@ -33,7 +47,6 @@ public class BowSystem : MonoBehaviour
 
     void FindNearestEnemy()
     {
-        // Sahnedeki "Enemy" tag'ine sahip tüm objeleri bul
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         float shortestDistance = Mathf.Infinity;
         GameObject nearestEnemy = null;
@@ -58,16 +71,34 @@ public class BowSystem : MonoBehaviour
         }
     }
 
-    void Shoot()
+    // --- YENİ EKLENEN KISIM: SERİ ATIŞ SİSTEMİ ---
+    IEnumerator ShootBurst()
     {
-        // Oku oluştur ve hedefe yönelt
-        GameObject arrowGO = Instantiate(arrowPrefab, firePoint.position, firePoint.rotation);
-
-        // Okun içindeki script'e hedefi, hasarı ve HIZI gönder
-        Arrow arrow = arrowGO.GetComponent<Arrow>();
-        if (arrow != null)
+        // arrowsPerShot (Ok Sayısı) kadar döngüye gir
+        for (int i = 0; i < arrowsPerShot; i++)
         {
-            arrow.Seek(target, arrowDamage, arrowSpeed);
+            // Eğer ilk ok düşmanı öldürdüyse, havaya sıkmamak için yeni düşman ara!
+            if (target == null) FindNearestEnemy();
+            if (target == null) break; // Etrafta hiç düşman kalmadıysa atışı kes
+
+            GameObject arrowGO = ArrowPool.Instance.GetArrow();
+            arrowGO.transform.position = firePoint.position;
+            arrowGO.transform.rotation = firePoint.rotation;
+            Arrow arrow = arrowGO.GetComponent<Arrow>();
+
+            if (arrow != null)
+            {
+                arrow.Seek(target, arrowDamage, arrowSpeed);
+            }
+
+            if (audioSource != null && bowFireSound != null)
+            {
+                audioSource.PlayOneShot(bowFireSound);
+            }
+
+            // Bir sonraki oku atmadan önce 0.15 saniye bekle (Makineli tüfek efekti)
+            yield return new WaitForSeconds(timeBetweenArrows);
         }
     }
+    // ---------------------------------------------
 }
