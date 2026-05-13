@@ -11,11 +11,9 @@ public class Enemy : MonoBehaviour, IDamageable
     public float moveSpeed = 3f;
     public float stopDistance = 1.2f;
 
-    // --- YENİ EKLENEN KISIM: Zorluk Ayarları ---
     [Header("Zorluk Ayarlari")]
     public float healthIncreasePerMinute = 20f; // Her 1 dakikada max cana eklenecek miktar
     private float baseMaxHealth;                // Havuz bozulmasın diye ilk canı tutacağımız hafıza
-    // -------------------------------------------
 
     [Header("Saldiri Ayarlari")]
     public float damageToPlayer = 10f;
@@ -29,6 +27,14 @@ public class Enemy : MonoBehaviour, IDamageable
     public Color hitColor = Color.darkRed;      // Hasar yiyince bürüneceği renk
     public float flashDuration = 0.15f;         // Kırmızı kalma süresi
 
+    // --- YENİ EKLENEN KISIM: ÖLÜM SONRASI ŞANSLI SPAWN ---
+    [Header("Ölüm Sonrası Spawn")]
+    public GameObject deathSpawnPrefab;         // Öldüğünde çıkacak olan obje (Patlama, ceset, loot vb.)
+
+    [Range(0f, 100f)]
+    public float spawnChance = 10f;             // Çıkma ihtimali (Varsayılan: %10)
+    // -----------------------------------------------------
+
     private float currentHealth;
     private bool isDead = false;
     private Transform player;
@@ -38,14 +44,12 @@ public class Enemy : MonoBehaviour, IDamageable
     private WaveManager waveManager;
     private Rigidbody rb;
 
-    // --- HIT FLASH DEĞİŞKENLERİ ---
     private Renderer[] meshRenderers;
     private Color[] originalColors;
     private Coroutine flashCoroutine;
 
     private void Awake()
     {
-        // İlk baştaki canı güvenli bir yere kaydediyoruz (Object Pool tuzağını engeller)
         baseMaxHealth = maxHealth;
 
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -68,13 +72,11 @@ public class Enemy : MonoBehaviour, IDamageable
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         }
 
-        // --- RENDERER VE ORİJİNAL RENKLERİ HAFIZAYA AL ---
         meshRenderers = GetComponentsInChildren<Renderer>();
         originalColors = new Color[meshRenderers.Length];
 
         for (int i = 0; i < meshRenderers.Length; i++)
         {
-            // Eğer materyalin bir ana rengi (_Color) varsa onu kaydet
             if (meshRenderers[i].material.HasProperty("_Color"))
             {
                 originalColors[i] = meshRenderers[i].material.color;
@@ -84,15 +86,9 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void OnEnable()
     {
-        // --- ZAMANA GÖRE CAN ARTIRMA SİSTEMİ ---
-        // Oyunun başından beri kaç dakika geçtiğini hesapla
         float minutesPassed = Time.timeSinceLevelLoad / 60f;
-
-        // Yeni Max Can = Orijinal Can + (Geçen Dakika * Dakika Başına Artış)
         maxHealth = baseMaxHealth + (minutesPassed * healthIncreasePerMinute);
-
-        currentHealth = maxHealth; // Canı yeni limite göre tam doldur
-        // ---------------------------------------
+        currentHealth = maxHealth;
 
         isDead = false;
         lastAttackTime = 0f;
@@ -104,7 +100,6 @@ public class Enemy : MonoBehaviour, IDamageable
 
         if (anim != null) anim.SetBool("isMoving", true);
 
-        // --- HAVUZDAN DOĞARKEN RENGİ SIFIRLA (Kırmızı doğmasını engeller) ---
         ResetColor();
     }
 
@@ -156,8 +151,7 @@ public class Enemy : MonoBehaviour, IDamageable
 
         currentHealth -= damage;
 
-        // --- KIRMIZI PARLAMA EFEKTİNİ BAŞLAT ---
-        if (flashCoroutine != null) StopCoroutine(flashCoroutine); // Üst üste vurulursa eskisini iptal et
+        if (flashCoroutine != null) StopCoroutine(flashCoroutine);
         flashCoroutine = StartCoroutine(FlashRoutine());
 
         if (currentHealth <= 0)
@@ -166,10 +160,8 @@ public class Enemy : MonoBehaviour, IDamageable
         }
     }
 
-    // --- ZAMANLAYICI: RENGİ DEĞİŞTİR VE GERİ AL ---
     private IEnumerator FlashRoutine()
     {
-        // 1. Tüm parçaları kırmızı yap
         for (int i = 0; i < meshRenderers.Length; i++)
         {
             if (meshRenderers[i].material.HasProperty("_Color"))
@@ -178,14 +170,11 @@ public class Enemy : MonoBehaviour, IDamageable
             }
         }
 
-        // 2. Belirlenen süre kadar bekle
         yield return new WaitForSeconds(flashDuration);
 
-        // 3. Orijinal renklerine geri döndür
         ResetColor();
     }
 
-    // --- RENK SIFIRLAMA FONKSİYONU ---
     private void ResetColor()
     {
         for (int i = 0; i < meshRenderers.Length; i++)
@@ -224,6 +213,20 @@ public class Enemy : MonoBehaviour, IDamageable
             Instantiate(xpPrefab, new Vector3(transform.position.x, 0.5f, transform.position.z), Quaternion.identity);
         }
 
+        // --- YENİ EKLENEN KISIM: %10 ŞANSLA SPAWN İŞLEMİ ---
+        if (deathSpawnPrefab != null)
+        {
+            // 0 ile 100 arasında rastgele bir sayı çek
+            float randomValue = Random.Range(0f, 100f);
+
+            // Çekilen sayı belirlediğimiz şansa eşit veya daha küçükse objeyi yarat
+            if (randomValue <= spawnChance)
+            {
+                Instantiate(deathSpawnPrefab, transform.position, Quaternion.identity);
+            }
+        }
+        // -----------------------------------------------------
+
         if (waveManager != null) waveManager.OnEnemyDefeated();
 
         ReturnToPool();
@@ -231,7 +234,6 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void ReturnToPool()
     {
-        // Havuza dönerken de ne olur ne olmaz rengini sıfırlayalım
         ResetColor();
 
         if (EnemyPool.Instance != null)
