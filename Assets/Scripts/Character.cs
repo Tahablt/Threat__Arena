@@ -6,6 +6,7 @@ public class Character : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float maxMoveSpeed = 15f; // YENÝ: Karakterin çýkabileceði maksimum hýz limiti
     [SerializeField] private float rotationSpeed = 10f;
 
     [Header("Dash Settings")]
@@ -84,11 +85,20 @@ public class Character : MonoBehaviour
         Debug.Log("Saldýrý Gücü Arttý: " + attackDamage);
     }
 
+    // GÜNCELLENDÝ: Artýk hýz sýnýrý var!
     public void IncreaseMoveSpeed(float amount)
     {
-        moveSpeed += amount;
-        currentSpeed = moveSpeed;
-        Debug.Log("Hareket Hýzý Arttý: " + moveSpeed);
+        if (moveSpeed < maxMoveSpeed)
+        {
+            moveSpeed += amount;
+            moveSpeed = Mathf.Min(moveSpeed, maxMoveSpeed); // Matematiksel olarak sýnýrý aþmasýný engeller
+            currentSpeed = moveSpeed;
+            Debug.Log("Hareket Hýzý Arttý: " + moveSpeed);
+        }
+        else
+        {
+            Debug.Log("Maksimum hýza zaten ulaþýldý!");
+        }
     }
 
     public void ReduceDashCooldown(float amount)
@@ -104,6 +114,29 @@ public class Character : MonoBehaviour
         Debug.Log("Kýlýç Boyu Arttý! Yeni Çarpan: " + vfxScaleMultiplier);
     }
     // ------------------------------------------------
+
+    // --- YENÝ EKLENEN KISIM: Süreli Hýz Botu Sistemi ---
+    public void ApplyTemporarySpeedBoost(float amount, float duration)
+    {
+        StartCoroutine(SpeedBoostRoutine(amount, duration));
+    }
+
+    private IEnumerator SpeedBoostRoutine(float amount, float duration)
+    {
+        // 1. Hýzý artýr
+        moveSpeed += amount;
+        currentSpeed = moveSpeed;
+        Debug.Log("Hýz Botu Aktif! Yeni Hýz: " + moveSpeed);
+
+        // 2. Belirlenen süre kadar (örn: 30sn) bekle
+        yield return new WaitForSeconds(duration);
+
+        // 3. Süre dolunca hýzý eski haline döndür
+        moveSpeed -= amount;
+        currentSpeed = moveSpeed;
+        Debug.Log("Hýz Botu Süresi Doldu. Hýz Eski Haline Döndü: " + moveSpeed);
+    }
+    // ---------------------------------------------------
 
     void Update()
     {

@@ -17,4 +17,4 @@ MonoBehaviour:
   itemName: "Can \u0130ksiri"
   description: "Can\u0131n\u0131 tazeler"
   rarity: 0
-  icon: {fileID: 7654287917567666178, guid: 6eb284054d50a7546948c9f893366c95, type: 3}
+  icon: {fileID: 21300000, guid: 31ff4b6bb346d7943af401e9325c7bea, type: 3}

@@ -27,12 +27,13 @@ public class Enemy : MonoBehaviour, IDamageable
     public Color hitColor = Color.darkRed;      // Hasar yiyince bürüneceği renk
     public float flashDuration = 0.15f;         // Kırmızı kalma süresi
 
-    // --- YENİ EKLENEN KISIM: ÖLÜM SONRASI ŞANSLI SPAWN ---
-    [Header("Ölüm Sonrası Spawn")]
-    public GameObject deathSpawnPrefab;         // Öldüğünde çıkacak olan obje (Patlama, ceset, loot vb.)
+    // --- YENİ EKLENEN KISIM: EŞYA DÜŞÜRME (LOOT) SİSTEMİ ---
+    [Header("Loot Ayarları (Düşen Eşyalar)")]
+    public GameObject magnetPrefab;             // Mıknatıs objesi buraya
+    public GameObject speedPowerUpPrefab;       // Hız nesnesi buraya
 
     [Range(0f, 100f)]
-    public float spawnChance = 10f;             // Çıkma ihtimali (Varsayılan: %10)
+    public float dropChance = 2f;               // Herhangi bir şeyin düşme ihtimali (Örn: %2)
     // -----------------------------------------------------
 
     private float currentHealth;
@@ -213,16 +214,24 @@ public class Enemy : MonoBehaviour, IDamageable
             Instantiate(xpPrefab, new Vector3(transform.position.x, 0.5f, transform.position.z), Quaternion.identity);
         }
 
-        // --- YENİ EKLENEN KISIM: %10 ŞANSLA SPAWN İŞLEMİ ---
-        if (deathSpawnPrefab != null)
-        {
-            // 0 ile 100 arasında rastgele bir sayı çek
-            float randomValue = Random.Range(0f, 100f);
+        // --- YENİ EKLENEN KISIM: %2 ŞANSLA MIKNATIS VEYA HIZ DÜŞÜRME ---
+        float randomValue = Random.Range(0f, 100f);
 
-            // Çekilen sayı belirlediğimiz şansa eşit veya daha küçükse objeyi yarat
-            if (randomValue <= spawnChance)
+        if (randomValue <= dropChance)
+        {
+            // Şans tuttu! Şimdi yazı tura atıp hangisinin düşeceğini seçiyoruz
+            float secondRoll = Random.Range(0f, 100f);
+            Vector3 dropPos = new Vector3(transform.position.x, 0.5f, transform.position.z);
+
+            if (secondRoll <= 50f && magnetPrefab != null)
             {
-                Instantiate(deathSpawnPrefab, transform.position, Quaternion.identity);
+                // %50 ihtimalle Mıknatıs
+                Instantiate(magnetPrefab, dropPos, Quaternion.identity);
+            }
+            else if (secondRoll > 50f && speedPowerUpPrefab != null)
+            {
+                // %50 ihtimalle Hız Nesnesi
+                Instantiate(speedPowerUpPrefab, dropPos, Quaternion.identity);
             }
         }
         // -----------------------------------------------------

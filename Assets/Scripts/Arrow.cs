@@ -13,32 +13,41 @@ public class Arrow : MonoBehaviour
         target = _target;
         damage = _damage;
         speed = _speed;
-        counter = 0f; // Havuzdan çıkınca zamanlayıcıyı sıfırla
+        counter = 0f;
 
-        if (target != null) transform.LookAt(target);
+        // Yan yatmasın diye LookAt komutunu buradan tamamen sildik!
     }
 
     void Update()
     {
-        // Hedef yoksa veya süre dolduysa havuza dön
-        if (target == null || !target.gameObject.activeInHierarchy)
+        // Hedef yoksa yok et
+        if (target == null)
         {
-            ArrowPool.Instance.ReturnArrow(gameObject);
+            Destroy(gameObject);
             return;
         }
 
         counter += Time.deltaTime;
         if (counter > lifeTime)
         {
-            ArrowPool.Instance.ReturnArrow(gameObject);
+            Destroy(gameObject);
             return;
         }
 
-        float step = speed * Time.deltaTime;
-        transform.position = Vector3.MoveTowards(transform.position, target.position, step);
-        transform.LookAt(target);
+        // --- GÖRÜNTÜ DÜZELTMESİ 1: Yerde Sürünmeyi Engelle ---
+        // Düşmanın ayaklarına (0) değil, gövdesine (0.5f) doğru uçsun
+        Vector3 targetPos = new Vector3(target.position.x, 0.5f, target.position.z);
 
-        if (Vector3.Distance(transform.position, target.position) <= 0.2f)
+        // Oraya doğru hareket et
+        float step = speed * Time.deltaTime;
+        transform.position = Vector3.MoveTowards(transform.position, targetPos, step);
+
+        // --- GÖRÜNTÜ DÜZELTMESİ 2: Havalı Dönüş ---
+        // Bomba yuvarlak olduğu için fırlatılırken kendi etrafında döne döne gitsin (Görsel şölen!)
+        // transform.Rotate(0, 360 * Time.deltaTime, 0);
+
+        // Hedefe ulaştı mı?
+        if (Vector3.Distance(transform.position, targetPos) <= 0.2f)
         {
             HitTarget();
         }
@@ -54,7 +63,6 @@ public class Arrow : MonoBehaviour
             enemy.TakeDamage(damage);
         }
 
-        // Çarptıktan sonra havuza geri gönder
-        ArrowPool.Instance.ReturnArrow(gameObject);
+        Destroy(gameObject);
     }
 }

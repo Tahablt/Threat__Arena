@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Kilic
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   id: kilic_01
+  itemType: 0
   itemName: "K\u0131l\u0131\xE7"
   description: "D\xFC\u015Fmanlar\u0131n i\xE7inden ge\xE7ip bi\xE7er"
   rarity: 0
-  icon: {fileID: 21300000, guid: 800d185abdb574b4a819e24e6abf75f1, type: 3}
+  icon: {fileID: 21300000, guid: 6fb250ee79191634fb7552509781ab7c, type: 3}

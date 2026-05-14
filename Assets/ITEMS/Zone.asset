@@ -17,4 +17,4 @@ MonoBehaviour:
   itemName: Zone
   description: "\xC7evredeki d\xFC\u015Fmanlara hasar verir"
   rarity: 1
-  icon: {fileID: -2494195361460513285, guid: 6eda80b050ad0ff4da2a01397720cc39, type: 3}
+  icon: {fileID: 21300000, guid: 7eafa72c94b484c4d9c50a1211d5f5a5, type: 3}
