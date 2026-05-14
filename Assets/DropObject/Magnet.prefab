@@ -106,13 +106,14 @@ MonoBehaviour:
   rotationDuration: 3
   floatHeight: 0.5
   floatDuration: 1.5
-  scaleDuration: 0.4
+  scaleDuration: 0.63
   poolObjectName: XPPool
   xpMoveDuration: 0.5
   xpScaleDuration: 0.3
   targetYOffset: 1
   delayBetweenXps: 0.05
   magnetSound: {fileID: 8300000, guid: d5d07aff754d507428c4df872ccfb079, type: 3}
+  soundVolume: 1
 --- !u!65 &6354767357409458563
 BoxCollider:
   m_ObjectHideFlags: 0

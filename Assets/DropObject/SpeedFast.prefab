@@ -94,13 +94,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4586996201828422072}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 388e62bb2abda6c41a74e0c154e42f96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeedPowerUp
   speedIncreaseAmount: 3
+  duration: 30
   speedSound: {fileID: 8300000, guid: dee5a5151ce40984dbb4f759668b5f22, type: 3}
+  soundVolume: 1
 --- !u!65 &15760595474058209
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -134,7 +136,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 968ae280e6726574fa893d197053253a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeedRunPickup
+  speedIncreaseAmount: 3
+  duration: 30
   rotationDuration: 3
   floatHeight: 0.5
   floatDuration: 1.5
-  scaleDuration: 0.4
+  scaleDuration: 5.85
+  speedSound: {fileID: 8300000, guid: dee5a5151ce40984dbb4f759668b5f22, type: 3}
+  soundVolume: 1
