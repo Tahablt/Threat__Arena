@@ -184,10 +184,44 @@ public class Character : MonoBehaviour
 
     void HandleInput()
     {
+        // 1. Önce Joystick verilerini alalým (Ekrana dokunuluyorsa)
+        float h = 0f;
+        float v = 0f;
+
         if (movementJoystick != null)
         {
-            joystickInput = new Vector2(movementJoystick.Horizontal, movementJoystick.Vertical);
-            if (joystickInput.magnitude > 1f) joystickInput.Normalize();
+            h = movementJoystick.Horizontal;
+            v = movementJoystick.Vertical;
+        }
+
+        // 2. Klavye verilerini alalým (W, A, S, D veya Yön Tuþlarý)
+        float keyboardH = Input.GetAxisRaw("Horizontal");
+        float keyboardV = Input.GetAxisRaw("Vertical");
+
+        // 3. Eðer klavyeden bir tuþa basýlýyorsa, Joystick'i ez ve Klavyeyi kullan
+        if (Mathf.Abs(keyboardH) > 0.1f || Mathf.Abs(keyboardV) > 0.1f)
+        {
+            h = keyboardH;
+            v = keyboardV;
+        }
+
+        // 4. Sonucu karaktere ilet
+        joystickInput = new Vector2(h, v);
+        if (joystickInput.magnitude > 1f) joystickInput.Normalize();
+
+        // --- BÝLGÝSAYAR TESTÝ ÝÇÝN KLAVYE KISAYOLLARI ---
+
+        // Boþluk (Space) tuþu ile Dash atma
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (canDash && !isDashing) StartDash();
+        }
+
+        // Fare Sol Týk ile Vuruþ yapma
+        if (Input.GetMouseButtonDown(0))
+        {
+            fireInput = true;
+            HandleFire();
         }
     }
 
