@@ -20,6 +20,10 @@ public class UpgradeManager : MonoBehaviour
     [Tooltip("Kılıç her seçildiğinde X, Y ve Z ekseninde ne kadar büyüyecek?")]
     public float scaleSize = 0.2f;
 
+    [Header("Ses Ayarları")]
+    public AudioSource uiAudioSource; // Level Up panelinde sesi çalacak alet
+    public AudioClip levelUpSound;    // Level Up olduğunda çalacak ses dosyası
+
     private List<ItemData> rastgeleItemler;
 
     private void Start()
@@ -31,6 +35,15 @@ public class UpgradeManager : MonoBehaviour
     {
         Time.timeScale = 0;
         levelUpPanel.SetActive(true);
+
+        // --- YENİ EKLENEN KISIM: SESİ ÇAL ---
+        // Oyun durduğu için (Time.timeScale = 0) sesin kesilmesini engelliyoruz
+        if (uiAudioSource != null && levelUpSound != null)
+        {
+            uiAudioSource.ignoreListenerPause = true;
+            uiAudioSource.PlayOneShot(levelUpSound);
+        }
+        // ------------------------------------
 
         rastgeleItemler = new List<ItemData>();
         List<ItemData> availableItems = new List<ItemData>(DataManager.Instance.tumEsyalar);
@@ -71,14 +84,10 @@ public class UpgradeManager : MonoBehaviour
             case ItemTypes.Sword:
                 if (playerCharacter != null)
                 {
-                    // 1. Kılıç hasarını artır
                     playerCharacter.IncreaseDamage(5f);
-
-                    // 2. YENİ: Mavi VFX kılıç efektini büyüt!
                     playerCharacter.IncreaseVFXScale(0.15f);
                 }
 
-                // Kılıcın fiziksel boyutunu (scale) artır
                 if (swordTransform != null)
                 {
                     swordTransform.localScale += new Vector3(scaleSize, scaleSize, scaleSize);
@@ -91,7 +100,6 @@ public class UpgradeManager : MonoBehaviour
                 break;
 
             case ItemTypes.Zone:
-                // AuraWeapon scriptini bul ve aktif et/geliştir
                 AuraWeapon aura = playerCharacter.GetComponentInChildren<AuraWeapon>(true);
                 if (aura != null)
                 {
@@ -101,23 +109,20 @@ public class UpgradeManager : MonoBehaviour
                 break;
 
             case ItemTypes.Bow:
-                // Megabonk Mantığı: Kılıç durur, Ok sistemi ek yetenek olarak açılır
                 BowSystem bow = playerCharacter.GetComponentInChildren<BowSystem>(true);
 
                 if (bow != null)
                 {
                     if (!bow.gameObject.activeSelf)
                     {
-                        // İlk alımda ok sistemini çalıştır
                         bow.gameObject.SetActive(true);
                         Debug.Log("Ok Sistemi Aktif Edildi! Otomatik ateş başlıyor.");
                     }
                     else
                     {
-                        // YENİ: Tekrar seçilirse hızı, hasarı artır VE OK SAYISINI 1 EKLE!
-                        bow.fireRate = Mathf.Max(0.2f, bow.fireRate - 0.05f); // Sınır koyduk, çok abartı hızlanmasın
+                        bow.fireRate = Mathf.Max(0.2f, bow.fireRate - 0.05f);
                         bow.arrowDamage += 3f;
-                        bow.arrowsPerShot += 1; // Ekstra ok atma yeteneği!
+                        bow.arrowsPerShot += 1;
 
                         Debug.Log("Ok Geliştirildi! Yeni Ok Sayısı: " + bow.arrowsPerShot);
                     }

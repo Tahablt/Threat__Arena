@@ -99,8 +99,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 388e62bb2abda6c41a74e0c154e42f96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeedPowerUp
-  speedIncreaseAmount: 5
-  duration: 30
+  speedIncreaseAmount: 3
+  speedSound: {fileID: 8300000, guid: dee5a5151ce40984dbb4f759668b5f22, type: 3}
 --- !u!65 &15760595474058209
 BoxCollider:
   m_ObjectHideFlags: 0

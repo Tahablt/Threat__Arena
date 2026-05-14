@@ -6,7 +6,7 @@ public class Character : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float maxMoveSpeed = 15f; // YENÝ: Karakterin çýkabileceði maksimum hýz limiti
+    [SerializeField] private float maxMoveSpeed = 15f;
     [SerializeField] private float rotationSpeed = 10f;
 
     [Header("Dash Settings")]
@@ -17,16 +17,11 @@ public class Character : MonoBehaviour
 
     [Header("Combat Settings")]
     public float attackDamage = 10f;
+    public float vfxScaleMultiplier = 1f;
 
-    // --- YENÝ EKLENEN KISIM: VFX Ölçek Ayarý ---
-    public float vfxScaleMultiplier = 1f; // Baþlangýç kýlýç boyutu
-    // ------------------------------------------
-
-    // --- YENÝ EKLENEN KISIM: Ses Ayarlarý ---
     [Header("Audio Settings")]
-    public AudioSource audioSource;      // Sesi çalacak alet (Hoparlör)
-    public AudioClip swordSwingSound;    // Çalýnacak kýlýç sesi dosyasý (Swoosh)
-    // ----------------------------------------
+    public AudioSource audioSource;
+    public AudioClip swordSwingSound;
 
     [Header("References")]
     [SerializeField] private FixedJoystick movementJoystick;
@@ -54,6 +49,12 @@ public class Character : MonoBehaviour
     public System.Action OnDashStart;
     public System.Action OnDashEnd;
     public System.Action OnFire;
+
+    // --- YENÝ SÝSTEM ÝÇÝN DEÐÝÞKENLER (Süre Uzatma) ---
+    private bool isSpeedBoostActive = false;
+    private float speedBoostEndTime = 0f;
+    private float appliedBoostAmount = 0f;
+    // --------------------------------------------------
 
     void Start()
     {
@@ -85,13 +86,12 @@ public class Character : MonoBehaviour
         Debug.Log("Saldýrý Gücü Arttý: " + attackDamage);
     }
 
-    // GÜNCELLENDÝ: Artýk hýz sýnýrý var!
     public void IncreaseMoveSpeed(float amount)
     {
         if (moveSpeed < maxMoveSpeed)
         {
             moveSpeed += amount;
-            moveSpeed = Mathf.Min(moveSpeed, maxMoveSpeed); // Matematiksel olarak sýnýrý aþmasýný engeller
+            moveSpeed = Mathf.Min(moveSpeed, maxMoveSpeed);
             currentSpeed = moveSpeed;
             Debug.Log("Hareket Hýzý Arttý: " + moveSpeed);
         }
@@ -107,33 +107,50 @@ public class Character : MonoBehaviour
         Debug.Log("Dash Bekleme Süresi Azaldý: " + dashCooldown);
     }
 
-    // --- YENÝ EKLENEN KISIM: Kýlýç Boyunu Artýrma ---
     public void IncreaseVFXScale(float amount)
     {
         vfxScaleMultiplier += amount;
         Debug.Log("Kýlýç Boyu Arttý! Yeni Çarpan: " + vfxScaleMultiplier);
     }
-    // ------------------------------------------------
 
-    // --- YENÝ EKLENEN KISIM: Süreli Hýz Botu Sistemi ---
+    // --- SÜRESÝ UZAYAN (STACKLENMEYEN) HIZ SÝSTEMÝ ---
     public void ApplyTemporarySpeedBoost(float amount, float duration)
     {
-        StartCoroutine(SpeedBoostRoutine(amount, duration));
+        if (isSpeedBoostActive)
+        {
+            // Zaten aktifse sadece süreyi uzat
+            speedBoostEndTime += duration;
+            Debug.Log("Hýz Botu süresi uzatýldý! Yeni bitiþe kalan süre: " + (speedBoostEndTime - Time.time));
+        }
+        else
+        {
+            // Ýlk kez alýnýyorsa hýzý artýr ve sayacý baþlat
+            isSpeedBoostActive = true;
+            appliedBoostAmount = amount;
+            speedBoostEndTime = Time.time + duration;
+
+            moveSpeed += amount;
+            currentSpeed = moveSpeed;
+            Debug.Log("Hýz Botu Ýlk Kez Aktif! Yeni Hýz: " + moveSpeed);
+
+            StartCoroutine(SpeedBoostRoutine());
+        }
     }
 
-    private IEnumerator SpeedBoostRoutine(float amount, float duration)
+    private IEnumerator SpeedBoostRoutine()
     {
-        // 1. Hýzý artýr
-        moveSpeed += amount;
-        currentSpeed = moveSpeed;
-        Debug.Log("Hýz Botu Aktif! Yeni Hýz: " + moveSpeed);
+        // Zamanlayýcý: Mevcut zaman, bitiþ zamanýna ulaþana kadar bekler
+        while (Time.time < speedBoostEndTime)
+        {
+            yield return null; // Bir sonraki kareye (frame) kadar bekle
+        }
 
-        // 2. Belirlenen süre kadar (örn: 30sn) bekle
-        yield return new WaitForSeconds(duration);
-
-        // 3. Süre dolunca hýzý eski haline döndür
-        moveSpeed -= amount;
+        // Süre dolunca hýzý BÝR KERE eski haline getir
+        moveSpeed -= appliedBoostAmount;
         currentSpeed = moveSpeed;
+        isSpeedBoostActive = false;
+        appliedBoostAmount = 0f;
+
         Debug.Log("Hýz Botu Süresi Doldu. Hýz Eski Haline Döndü: " + moveSpeed);
     }
     // ---------------------------------------------------
@@ -278,12 +295,10 @@ public class Character : MonoBehaviour
                 animator.SetTrigger("Attack");
             }
 
-            // --- YENÝ EKLENEN KISIM: SESÝ ÇAL ---
             if (audioSource != null && swordSwingSound != null)
             {
                 audioSource.PlayOneShot(swordSwingSound);
             }
-            // ------------------------------------
 
             fireInput = false;
         }

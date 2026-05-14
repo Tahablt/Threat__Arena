@@ -13,16 +13,19 @@ public class Magnet : MonoBehaviour
 
     [Header("XP (Havuz) Çekim Ayarları")]
     public string poolObjectName = "XPool";
-    public float xpMoveDuration = 0.8f;      // Daha yavaş ve smooth olması için süre artırıldı
+    public float xpMoveDuration = 0.8f;
     public float xpScaleDuration = 0.3f;
-    public float targetYOffset = 1.2f;       // Oyuncunun ne kadar üstüne gidecekler
-    public float delayBetweenXps = 0.05f;    // XP'lerin sırayla gelmesi için aradaki gecikme
+    public float targetYOffset = 1.2f;
+    public float delayBetweenXps = 0.05f;
+
+    [Header("Ses Ayarları")]
+    public AudioClip magnetSound;
+    [Range(0f, 1f)] public float soundVolume = 1f; // YENİ: Mıknatıs sesi seviyesi
 
     private bool isCollected = false;
 
     private void Start()
     {
-        // Başlangıç animasyonları
         transform.DOLocalRotate(new Vector3(0, 360, 0), rotationDuration, RotateMode.FastBeyond360)
             .SetLoops(-1, LoopType.Restart).SetEase(Ease.Linear);
 
@@ -36,11 +39,20 @@ public class Magnet : MonoBehaviour
         if (other.CompareTag("Player") && !isCollected)
         {
             isCollected = true;
+            if (magnetSound != null)
+            {
+                Character playerChar = other.GetComponent<Character>();
+                if (playerChar != null && playerChar.audioSource != null)
+                {
+                    playerChar.audioSource.PlayOneShot(magnetSound, soundVolume);
+                }
+                else
+                {
+                    AudioSource.PlayClipAtPoint(magnetSound, transform.position, soundVolume);
+                }
+            }
 
-            // --- YENİ EKLENEN KISIM ---
-            // DOTween InOutElastic eksi değere düştüğünde BoxCollider hata vermesin diye çarpışmayı kapatıyoruz.
             GetComponent<Collider>().enabled = false;
-            // --------------------------
 
             GameObject xPool = GameObject.Find(poolObjectName);
             if (xPool != null)
@@ -50,7 +62,6 @@ public class Magnet : MonoBehaviour
                 {
                     if (child.gameObject.activeInHierarchy)
                     {
-                        // Her XP için küçük bir gecikme hesapla (Sırayla uçmaları için)
                         float delay = index * delayBetweenXps;
                         MoveXpToPlayer(child, other.transform, xPool.transform, delay);
                         index++;
@@ -58,7 +69,6 @@ public class Magnet : MonoBehaviour
                 }
             }
 
-            // Magnetin kendi yok olma animasyonu
             transform.DOKill();
             transform.DOScale(Vector3.zero, scaleDuration)
                 .SetEase(Ease.InOutElastic)
@@ -69,15 +79,10 @@ public class Magnet : MonoBehaviour
     private void MoveXpToPlayer(Transform xp, Transform player, Transform poolRoot, float delay)
     {
         xp.DOKill();
-
-        // 1. XP'nin havuzdaki gerçek orijinal boyutunu hafızaya alıyoruz
         Vector3 originalScale = xp.localScale;
-
-        // Oyuncuyu takip etmesi için önce player'ın child'ı yapıyoruz
         xp.SetParent(player, true);
 
         Sequence xpSequence = DOTween.Sequence();
-
         xpSequence.AppendInterval(delay);
         xpSequence.Append(xp.DOLocalMove(new Vector3(0, targetYOffset, 0), xpMoveDuration).SetEase(Ease.OutQuad));
         xpSequence.Join(xp.DOScale(Vector3.zero, xpScaleDuration).SetDelay(xpMoveDuration * 0.7f));
@@ -86,8 +91,6 @@ public class Magnet : MonoBehaviour
         {
             xp.gameObject.SetActive(false);
             xp.SetParent(poolRoot);
-
-            // 2. Vector3.one YERİNE, kaydettiğimiz gerçek boyutuna geri döndürüyoruz!
             xp.localScale = originalScale;
         });
     }
