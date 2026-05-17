@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7857259459952145721}
   - component: {fileID: 5273759481648033710}
-  - component: {fileID: 5913720096871222374}
   m_Layer: 7
   m_Name: Slime
   m_TagString: Untagged
@@ -103,24 +102,6 @@ SkinnedMeshRenderer:
     m_Center: {x: -0.3588662, y: 0.1749603, z: 0.000000059604645}
     m_Extent: {x: 0.62954795, y: 0.6683546, z: 0.4895594}
   m_DirtyAABB: 0
---- !u!114 &5913720096871222374
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19318609298331807}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Outline
-  outlineMode: 0
-  outlineColor: {r: 1, g: 0, b: 0, a: 1}
-  outlineWidth: 5
-  precomputeOutline: 0
-  bakeKeys: []
-  bakeValues: []
 --- !u!1 &73034189599502481
 GameObject:
   m_ObjectHideFlags: 0
@@ -389,6 +370,7 @@ GameObject:
   - component: {fileID: 8035681660144644490}
   - component: {fileID: 6999732905784133162}
   - component: {fileID: 1793985385771785059}
+  - component: {fileID: 3444873573881066044}
   m_Layer: 7
   m_Name: SlimePolyart
   m_TagString: Enemy
@@ -455,9 +437,11 @@ MonoBehaviour:
   damageToPlayer: 10
   attackInterval: 1
   xpPrefab: {fileID: 0}
-  hitColor: {r: 0.10099983, g: 1, b: 0, a: 1}
+  hitColor: {r: 0, g: 0.9655211, b: 1, a: 1}
   flashDuration: 0.15
-  deathSpawnPrefab: {fileID: 0}
+  magnetPrefab: {fileID: 6549878800348638735, guid: 89d9110a78d805e41b96995d3209df8c, type: 3}
+  speedPowerUpPrefab: {fileID: 4586996201828422072, guid: 09abe48050f513b498af45229520c959, type: 3}
+  dropChance: 3
 --- !u!136 &1793985385771785059
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -481,6 +465,18 @@ CapsuleCollider:
   m_Height: 1.0028815
   m_Direction: 1
   m_Center: {x: 0, y: 0.41012597, z: 0}
+--- !u!114 &3444873573881066044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7153141402127884706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47369ea7d2dddfc4c8c2921aac904228, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MagnetItem
 --- !u!1 &7446019047767849115
 GameObject:
   m_ObjectHideFlags: 0

@@ -72,7 +72,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6036988292253137531}
   - component: {fileID: 734471815632122533}
-  - component: {fileID: 7223580147970155590}
   m_Layer: 7
   m_Name: TurtleShell
   m_TagString: Untagged
@@ -185,24 +184,6 @@ SkinnedMeshRenderer:
     m_Center: {x: -0.446875, y: 0.3599043, z: 0}
     m_Extent: {x: 0.7597805, y: 0.7337334, z: 0.7809485}
   m_DirtyAABB: 0
---- !u!114 &7223580147970155590
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 975630734615174291}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Outline
-  outlineMode: 0
-  outlineColor: {r: 1, g: 0, b: 0, a: 1}
-  outlineWidth: 5
-  precomputeOutline: 0
-  bakeKeys: []
-  bakeValues: []
 --- !u!1 &1526939585842620943
 GameObject:
   m_ObjectHideFlags: 0
@@ -921,6 +902,7 @@ GameObject:
   - component: {fileID: 5162232971360506}
   - component: {fileID: 8237370227849105847}
   - component: {fileID: 3484118840155086137}
+  - component: {fileID: 237702731266674706}
   m_Layer: 7
   m_Name: TurtleShellPolyart
   m_TagString: Enemy
@@ -989,7 +971,9 @@ MonoBehaviour:
   xpPrefab: {fileID: 0}
   hitColor: {r: 1, g: 0, b: 0, a: 1}
   flashDuration: 0.15
-  deathSpawnPrefab: {fileID: 0}
+  magnetPrefab: {fileID: 6549878800348638735, guid: 89d9110a78d805e41b96995d3209df8c, type: 3}
+  speedPowerUpPrefab: {fileID: 4586996201828422072, guid: 09abe48050f513b498af45229520c959, type: 3}
+  dropChance: 3
 --- !u!136 &3484118840155086137
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1013,6 +997,18 @@ CapsuleCollider:
   m_Height: 1.2878137
   m_Direction: 1
   m_Center: {x: 0, y: 0.41304898, z: -0.06191373}
+--- !u!114 &237702731266674706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6753617674297473082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47369ea7d2dddfc4c8c2921aac904228, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MagnetItem
 --- !u!1 &6861681153245785469
 GameObject:
   m_ObjectHideFlags: 0

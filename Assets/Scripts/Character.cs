@@ -50,7 +50,7 @@ public class Character : MonoBehaviour
     public System.Action OnDashEnd;
     public System.Action OnFire;
 
-    // --- YENÝ SÝSTEM ÝÇÝN DEÐÝÞKENLER (Süre Uzatma) ---
+    // --- YENï¿½ Sï¿½STEM ï¿½ï¿½ï¿½N DEï¿½ï¿½ï¿½KENLER (Sï¿½re Uzatma) ---
     private bool isSpeedBoostActive = false;
     private float speedBoostEndTime = 0f;
     private float appliedBoostAmount = 0f;
@@ -68,7 +68,7 @@ public class Character : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
 
         if (cameraTransform == null) cameraTransform = Camera.main.transform;
-        if (movementJoystick == null) Debug.LogError("Joystick atanmamýþ!");
+        if (movementJoystick == null) Debug.LogError("Joystick atanmamï¿½ï¿½!");
 
         currentSpeed = moveSpeed;
     }
@@ -79,11 +79,11 @@ public class Character : MonoBehaviour
         if (fireButton != null) fireButton.onClick.AddListener(OnFireButtonPressed);
     }
 
-    // --- UPGRADE FONKSÝYONLARI ---
+    // --- UPGRADE FONKSï¿½YONLARI ---
     public void IncreaseDamage(float amount)
     {
         attackDamage += amount;
-        Debug.Log("Saldýrý Gücü Arttý: " + attackDamage);
+        Debug.Log("Saldï¿½rï¿½ Gï¿½cï¿½ Arttï¿½: " + attackDamage);
     }
 
     public void IncreaseMoveSpeed(float amount)
@@ -93,45 +93,45 @@ public class Character : MonoBehaviour
             moveSpeed += amount;
             moveSpeed = Mathf.Min(moveSpeed, maxMoveSpeed);
             currentSpeed = moveSpeed;
-            Debug.Log("Hareket Hýzý Arttý: " + moveSpeed);
+            Debug.Log("Hareket Hï¿½zï¿½ Arttï¿½: " + moveSpeed);
         }
         else
         {
-            Debug.Log("Maksimum hýza zaten ulaþýldý!");
+            Debug.Log("Maksimum hï¿½za zaten ulaï¿½ï¿½ldï¿½!");
         }
     }
 
     public void ReduceDashCooldown(float amount)
     {
         dashCooldown = Mathf.Max(0.2f, dashCooldown - amount);
-        Debug.Log("Dash Bekleme Süresi Azaldý: " + dashCooldown);
+        Debug.Log("Dash Bekleme Sï¿½resi Azaldï¿½: " + dashCooldown);
     }
 
     public void IncreaseVFXScale(float amount)
     {
         vfxScaleMultiplier += amount;
-        Debug.Log("Kýlýç Boyu Arttý! Yeni Çarpan: " + vfxScaleMultiplier);
+        Debug.Log("Kï¿½lï¿½ï¿½ Boyu Arttï¿½! Yeni ï¿½arpan: " + vfxScaleMultiplier);
     }
 
-    // --- SÜRESÝ UZAYAN (STACKLENMEYEN) HIZ SÝSTEMÝ ---
+    // --- Sï¿½RESï¿½ UZAYAN (STACKLENMEYEN) HIZ Sï¿½STEMï¿½ ---
     public void ApplyTemporarySpeedBoost(float amount, float duration)
     {
         if (isSpeedBoostActive)
         {
-            // Zaten aktifse sadece süreyi uzat
+            // Zaten aktifse sadece sï¿½reyi uzat
             speedBoostEndTime += duration;
-            Debug.Log("Hýz Botu süresi uzatýldý! Yeni bitiþe kalan süre: " + (speedBoostEndTime - Time.time));
+            Debug.Log("Hï¿½z Botu sï¿½resi uzatï¿½ldï¿½! Yeni bitiï¿½e kalan sï¿½re: " + (speedBoostEndTime - Time.time));
         }
         else
         {
-            // Ýlk kez alýnýyorsa hýzý artýr ve sayacý baþlat
+            // ï¿½lk kez alï¿½nï¿½yorsa hï¿½zï¿½ artï¿½r ve sayacï¿½ baï¿½lat
             isSpeedBoostActive = true;
             appliedBoostAmount = amount;
             speedBoostEndTime = Time.time + duration;
 
             moveSpeed += amount;
             currentSpeed = moveSpeed;
-            Debug.Log("Hýz Botu Ýlk Kez Aktif! Yeni Hýz: " + moveSpeed);
+            Debug.Log("Hï¿½z Botu ï¿½lk Kez Aktif! Yeni Hï¿½z: " + moveSpeed);
 
             StartCoroutine(SpeedBoostRoutine());
         }
@@ -139,19 +139,19 @@ public class Character : MonoBehaviour
 
     private IEnumerator SpeedBoostRoutine()
     {
-        // Zamanlayýcý: Mevcut zaman, bitiþ zamanýna ulaþana kadar bekler
+        // Zamanlayï¿½cï¿½: Mevcut zaman, bitiï¿½ zamanï¿½na ulaï¿½ana kadar bekler
         while (Time.time < speedBoostEndTime)
         {
             yield return null; // Bir sonraki kareye (frame) kadar bekle
         }
 
-        // Süre dolunca hýzý BÝR KERE eski haline getir
+        // Sï¿½re dolunca hï¿½zï¿½ Bï¿½R KERE eski haline getir
         moveSpeed -= appliedBoostAmount;
         currentSpeed = moveSpeed;
         isSpeedBoostActive = false;
         appliedBoostAmount = 0f;
 
-        Debug.Log("Hýz Botu Süresi Doldu. Hýz Eski Haline Döndü: " + moveSpeed);
+        Debug.Log("Hï¿½z Botu Sï¿½resi Doldu. Hï¿½z Eski Haline Dï¿½ndï¿½: " + moveSpeed);
     }
     // ---------------------------------------------------
 
@@ -184,7 +184,7 @@ public class Character : MonoBehaviour
 
     void HandleInput()
     {
-        // 1. Önce Joystick verilerini alalým (Ekrana dokunuluyorsa)
+        // 1. ï¿½nce Joystick verilerini alalï¿½m (Ekrana dokunuluyorsa)
         float h = 0f;
         float v = 0f;
 
@@ -194,11 +194,11 @@ public class Character : MonoBehaviour
             v = movementJoystick.Vertical;
         }
 
-        // 2. Klavye verilerini alalým (W, A, S, D veya Yön Tuþlarý)
+        // 2. Klavye verilerini alalï¿½m (W, A, S, D veya Yï¿½n Tuï¿½larï¿½)
         float keyboardH = Input.GetAxisRaw("Horizontal");
         float keyboardV = Input.GetAxisRaw("Vertical");
 
-        // 3. Eðer klavyeden bir tuþa basýlýyorsa, Joystick'i ez ve Klavyeyi kullan
+        // 3. Eï¿½er klavyeden bir tuï¿½a basï¿½lï¿½yorsa, Joystick'i ez ve Klavyeyi kullan
         if (Mathf.Abs(keyboardH) > 0.1f || Mathf.Abs(keyboardV) > 0.1f)
         {
             h = keyboardH;
@@ -209,15 +209,15 @@ public class Character : MonoBehaviour
         joystickInput = new Vector2(h, v);
         if (joystickInput.magnitude > 1f) joystickInput.Normalize();
 
-        // --- BÝLGÝSAYAR TESTÝ ÝÇÝN KLAVYE KISAYOLLARI ---
+        // --- Bï¿½LGï¿½SAYAR TESTï¿½ ï¿½ï¿½ï¿½N KLAVYE KISAYOLLARI ---
 
-        // Boþluk (Space) tuþu ile Dash atma
+        // Boï¿½luk (Space) tuï¿½u ile Dash atma
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (canDash && !isDashing) StartDash();
         }
 
-        // Fare Sol Týk ile Vuruþ yapma
+        // Fare Sol Tï¿½k ile Vuruï¿½ yapma
         if (Input.GetMouseButtonDown(0))
         {
             fireInput = true;
