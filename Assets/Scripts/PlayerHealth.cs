@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using DG.Tweening;
-using System.Collections; // Coroutine için eklendi
+using System.Collections;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -15,7 +15,6 @@ public class PlayerHealth : MonoBehaviour
     public Slider healthSlider;
     public GameObject gameOverPanel;
 
-    // --- YENÝ EKLENEN KISIM: Vuruþ Hissiyatý (Hit Flash) ---
     [Header("Vurus Hissiyati (Player Hit Flash)")]
     public Color hitColor = Color.red;
     public float flashDuration = 0.15f;
@@ -23,7 +22,7 @@ public class PlayerHealth : MonoBehaviour
     private Renderer[] meshRenderers;
     private Color[] originalColors;
     private Coroutine flashCoroutine;
-    // -------------------------------------------------------
+    private MaterialPropertyBlock propBlock;
 
     private void Start()
     {
@@ -34,18 +33,17 @@ public class PlayerHealth : MonoBehaviour
         UpdateHealthBar();
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
 
-        // --- RENDERER VE ORÝJÝNAL RENKLERÝ HAFIZAYA AL ---
         meshRenderers = GetComponentsInChildren<Renderer>();
         originalColors = new Color[meshRenderers.Length];
+        propBlock = new MaterialPropertyBlock();
 
         for (int i = 0; i < meshRenderers.Length; i++)
         {
-            if (meshRenderers[i].material.HasProperty("_Color"))
+            if (meshRenderers[i].sharedMaterial != null && meshRenderers[i].sharedMaterial.HasProperty("_Color"))
             {
-                originalColors[i] = meshRenderers[i].material.color;
+                originalColors[i] = meshRenderers[i].sharedMaterial.color;
             }
         }
-        // -------------------------------------------------
     }
 
     public void TakeDamage(float damage)
@@ -56,43 +54,36 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         UpdateHealthBar();
 
-        // --- KIRMIZI PARLAMA EFEKTÝNÝ BAÞLAT ---
         if (flashCoroutine != null) StopCoroutine(flashCoroutine);
         flashCoroutine = StartCoroutine(FlashRoutine());
-        // ---------------------------------------
 
         if (currentHealth <= 0) Die();
     }
 
-    // --- ZAMANLAYICI: RENGÝ DEÐÝÞTÝR VE GERÝ AL ---
-    // --- ZAMANLAYICI: RENGÝ DEÐÝÞTÝR VE GERÝ AL ---
     private IEnumerator FlashRoutine()
     {
-        // 1. Karakterin tüm parçalarýný kýrmýzý yap
         for (int i = 0; i < meshRenderers.Length; i++)
         {
-            // GÜVENLÝK KONTROLÜ: Parça silinmiþse (null ise) atla!
-            if (meshRenderers[i] != null && meshRenderers[i].material.HasProperty("_Color"))
+            if (meshRenderers[i] != null && meshRenderers[i].sharedMaterial.HasProperty("_Color"))
             {
-                meshRenderers[i].material.color = hitColor;
+                meshRenderers[i].GetPropertyBlock(propBlock);
+                propBlock.SetColor("_Color", hitColor);
+                meshRenderers[i].SetPropertyBlock(propBlock);
             }
         }
 
-        // 2. Belirlenen süre kadar bekle
         yield return new WaitForSeconds(flashDuration);
 
-        // 3. Orijinal renklerine geri döndür
         for (int i = 0; i < meshRenderers.Length; i++)
         {
-            // GÜVENLÝK KONTROLÜ: Parça silinmiþse (null ise) atla!
-            if (meshRenderers[i] != null && meshRenderers[i].material.HasProperty("_Color"))
+            if (meshRenderers[i] != null && meshRenderers[i].sharedMaterial.HasProperty("_Color"))
             {
-                meshRenderers[i].material.color = originalColors[i];
+                meshRenderers[i].GetPropertyBlock(propBlock);
+                propBlock.SetColor("_Color", originalColors[i]);
+                meshRenderers[i].SetPropertyBlock(propBlock);
             }
         }
     }
-    // ----------------------------------------------
-    // ----------------------------------------------
 
     public void Heal(float amount)
     {
@@ -101,7 +92,6 @@ public class PlayerHealth : MonoBehaviour
         currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         UpdateHealthBar();
-        Debug.Log("Can yenilendi! Mevcut Can: " + currentHealth);
     }
 
     void UpdateHealthBar()
@@ -115,13 +105,9 @@ public class PlayerHealth : MonoBehaviour
     private void Die()
     {
         isDead = true;
-        DOVirtual.DelayedCall(.5f, () =>
-        {
-            Time.timeScale = 0;
-        });
+        DOVirtual.DelayedCall(.5f, () => { Time.timeScale = 0; });
 
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(true);
+        if (gameOverPanel != null) gameOverPanel.SetActive(true);
     }
 
     public void RestartGame()

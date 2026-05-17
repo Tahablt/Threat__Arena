@@ -7,13 +7,13 @@ public class SpeedRunPickup : MonoBehaviour
     public float speedIncreaseAmount = 3f;
     public float duration = 30f;
 
-    [Header("Dönme ve Süzülme Ayarları (Idle)")]
+    [Header("Dönme ve Süzülme Ayarları")]
     public float rotationDuration = 3f;
     public float floatHeight = 0.5f;
     public float floatDuration = 1.5f;
 
     [Header("Toplanma Animasyonu Ayarları")]
-    public float scaleDuration = 0.4f;
+    public float scaleDuration = 0.15f;
 
     [Header("Ses Ayarları")]
     public AudioClip speedSound;
@@ -23,13 +23,17 @@ public class SpeedRunPickup : MonoBehaviour
 
     private void Start()
     {
-        // 1. Kendi etrafında sürekli dönme
-        transform.DOLocalRotate(new Vector3(0, 360, 0), rotationDuration, RotateMode.FastBeyond360)
+        // Sürekli dönme
+        transform.DOLocalRotate(
+            new Vector3(0, 360, 0),
+            rotationDuration,
+            RotateMode.FastBeyond360)
             .SetLoops(-1, LoopType.Restart)
             .SetEase(Ease.Linear);
 
-        // 2. Yukarı-aşağı sürekli süzülme (Yoyo efekti)
+        // Yukarı aşağı süzülme
         float targetY = transform.localPosition.y + floatHeight;
+
         transform.DOLocalMoveY(targetY, floatDuration)
             .SetLoops(-1, LoopType.Yoyo)
             .SetEase(Ease.InOutSine);
@@ -41,21 +45,18 @@ public class SpeedRunPickup : MonoBehaviour
         {
             Character player = other.GetComponent<Character>();
 
-            // Eğer çarpan objede Character scripti varsa işlemleri başlat
             if (player != null)
             {
                 isCollected = true;
 
-                // Çarpışmayı kapatarak birden fazla kez tetiklenmesini ve animasyon hatalarını önle
+                // Collider kapat
                 Collider col = GetComponent<Collider>();
                 if (col != null)
                 {
                     col.enabled = false;
                 }
 
-                // --- 1. SES VE GÜÇLENDİRME İŞLEMLERİ (ANINDA) ---
-
-                // Sesi çal (Karakterin audio source'u varsa oradan, yoksa pozisyondan)
+                // Ses çal
                 if (speedSound != null)
                 {
                     if (player.audioSource != null)
@@ -68,18 +69,16 @@ public class SpeedRunPickup : MonoBehaviour
                     }
                 }
 
-                // Geçici hızı oyuncuya uygula
+                // Speed boost uygula
                 player.ApplyTemporarySpeedBoost(speedIncreaseAmount, duration);
 
-
-                // --- 2. ANİMASYON VE YOK OLMA İŞLEMLERİ ---
-
-                // Mevcut dönme/süzülme animasyonlarını durdur
+                // Aktif tweenleri tamamen temizle
+                transform.DOComplete();
                 transform.DOKill();
 
-                // InOutElastic ile küçülme animasyonunu başlat ve bitince objeyi sil
+                // Hızlı küçülüp yok ol
                 transform.DOScale(Vector3.zero, scaleDuration)
-                    .SetEase(Ease.InOutElastic)
+                    .SetEase(Ease.OutQuad)
                     .OnComplete(() =>
                     {
                         Destroy(gameObject);
@@ -90,7 +89,6 @@ public class SpeedRunPickup : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Obje silinirken (veya sahne değişirken) arkada çalışan tween kalmasın
         transform.DOKill();
     }
 }

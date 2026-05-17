@@ -902,7 +902,6 @@ GameObject:
   - component: {fileID: 5162232971360506}
   - component: {fileID: 8237370227849105847}
   - component: {fileID: 3484118840155086137}
-  - component: {fileID: 237702731266674706}
   m_Layer: 7
   m_Name: TurtleShellPolyart
   m_TagString: Enemy
@@ -997,18 +996,6 @@ CapsuleCollider:
   m_Height: 1.2878137
   m_Direction: 1
   m_Center: {x: 0, y: 0.41304898, z: -0.06191373}
---- !u!114 &237702731266674706
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6753617674297473082}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 47369ea7d2dddfc4c8c2921aac904228, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MagnetItem
 --- !u!1 &6861681153245785469
 GameObject:
   m_ObjectHideFlags: 0

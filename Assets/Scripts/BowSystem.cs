@@ -1,24 +1,22 @@
 using UnityEngine;
-using System.Collections; // Coroutine için eklendi
+using System.Collections;
 
 public class BowSystem : MonoBehaviour
 {
     [Header("Ayarlar")]
-    public GameObject arrowPrefab;      // Fırlatılacak ok prefabı
-    public Transform firePoint;         // Okun çıkacağı nokta
-    public float fireRate = 1.5f;       // Kaç saniyede bir ok atılsın?
-    public float range = 10f;           // Düşman arama menzili
-    public float arrowDamage = 10f;     // Okun hasarı
-    public float arrowSpeed = 25f;      // Okun gidiş hızı
+    public GameObject arrowPrefab;      
+    public Transform firePoint;         
+    public float fireRate = 1.5f;       
+    public float range = 10f;           
+    public float arrowDamage = 10f;     
+    public float arrowSpeed = 25f;      
 
-    // --- YENİ EKLENEN KISIM: Çoklu Ok Ayarları ---
-    public int arrowsPerShot = 1;       // Tek seferde atılacak ok sayısı
-    public float timeBetweenArrows = 0.15f; // Okların peş peşe çıkma süresi
-    // ---------------------------------------------
+    public int arrowsPerShot = 1;       
+    public float timeBetweenArrows = 0.15f; 
 
     [Header("Ses Ayarlari")]
-    public AudioClip bowFireSound;      // Ok fırlatma sesi
-    private AudioSource audioSource;    // Karakterdeki hoparlör
+    public AudioClip bowFireSound;      
+    private AudioSource audioSource;    
 
     private float fireCountdown = 0f;
     private Transform target;
@@ -37,7 +35,6 @@ public class BowSystem : MonoBehaviour
 
         if (fireCountdown <= 0f && target != null)
         {
-            // Artık Shoot() yerine zamanlayıcılı Seri Atış fonksiyonunu başlatıyoruz
             StartCoroutine(ShootBurst());
             fireCountdown = 1f / fireRate;
         }
@@ -47,39 +44,33 @@ public class BowSystem : MonoBehaviour
 
     void FindNearestEnemy()
     {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        // --- OPTİMİZASYON: Tüm haritayı değil, sadece etrafındaki küreyi tarar ---
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, range);
         float shortestDistance = Mathf.Infinity;
-        GameObject nearestEnemy = null;
+        Transform nearestEnemy = null;
 
-        foreach (GameObject enemy in enemies)
+        foreach (var hitCollider in hitColliders)
         {
-            float distanceToEnemy = Vector3.Distance(transform.position, enemy.transform.position);
-            if (distanceToEnemy < shortestDistance)
+            if (hitCollider.CompareTag("Enemy"))
             {
-                shortestDistance = distanceToEnemy;
-                nearestEnemy = enemy;
+                float distanceToEnemy = Vector3.Distance(transform.position, hitCollider.transform.position);
+                if (distanceToEnemy < shortestDistance)
+                {
+                    shortestDistance = distanceToEnemy;
+                    nearestEnemy = hitCollider.transform;
+                }
             }
         }
 
-        if (nearestEnemy != null && shortestDistance <= range)
-        {
-            target = nearestEnemy.transform;
-        }
-        else
-        {
-            target = null;
-        }
+        target = nearestEnemy;
     }
 
-    // --- YENİ EKLENEN KISIM: SERİ ATIŞ SİSTEMİ ---
     IEnumerator ShootBurst()
     {
-        // arrowsPerShot (Ok Sayısı) kadar döngüye gir
         for (int i = 0; i < arrowsPerShot; i++)
         {
-            // Eğer ilk ok düşmanı öldürdüyse, havaya sıkmamak için yeni düşman ara!
             if (target == null) FindNearestEnemy();
-            if (target == null) break; // Etrafta hiç düşman kalmadıysa atışı kes
+            if (target == null) break; 
 
             GameObject arrowGO = ArrowPool.Instance.GetArrow();
             arrowGO.transform.position = firePoint.position;
@@ -96,9 +87,7 @@ public class BowSystem : MonoBehaviour
                 audioSource.PlayOneShot(bowFireSound);
             }
 
-            // Bir sonraki oku atmadan önce 0.15 saniye bekle (Makineli tüfek efekti)
             yield return new WaitForSeconds(timeBetweenArrows);
         }
     }
-    // ---------------------------------------------
 }

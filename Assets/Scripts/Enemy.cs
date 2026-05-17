@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections; // Coroutine (Zamanlayıcı) için gerekli
+using System.Collections;
 
 public enum EnemyType { Slime, Turtle }
 
@@ -12,8 +12,8 @@ public class Enemy : MonoBehaviour, IDamageable
     public float stopDistance = 1.2f;
 
     [Header("Zorluk Ayarlari")]
-    public float healthIncreasePerMinute = 20f; // Her 1 dakikada max cana eklenecek miktar
-    private float baseMaxHealth;                // Havuz bozulmasın diye ilk canı tutacağımız hafıza
+    public float healthIncreasePerMinute = 20f;
+    private float baseMaxHealth;
 
     [Header("Saldiri Ayarlari")]
     public float damageToPlayer = 10f;
@@ -24,17 +24,15 @@ public class Enemy : MonoBehaviour, IDamageable
     public GameObject xpPrefab;
 
     [Header("Vurus Hissiyati (Hit Flash)")]
-    public Color hitColor = Color.darkRed;      // Hasar yiyince bürüneceği renk
-    public float flashDuration = 0.15f;         // Kırmızı kalma süresi
+    public Color hitColor = Color.red;
+    public float flashDuration = 0.15f;
 
-    // --- YENİ EKLENEN KISIM: EŞYA DÜŞÜRME (LOOT) SİSTEMİ ---
     [Header("Loot Ayarları (Düşen Eşyalar)")]
-    public GameObject magnetPrefab;             // Mıknatıs objesi buraya
-    public GameObject speedPowerUpPrefab;       // Hız nesnesi buraya
+    public GameObject magnetPrefab;
+    public GameObject speedPowerUpPrefab;
 
     [Range(0f, 100f)]
-    public float dropChance = 2f;               // Herhangi bir şeyin düşme ihtimali (Örn: %2)
-    // -----------------------------------------------------
+    public float dropChance = 2f;
 
     private float currentHealth;
     private bool isDead = false;
@@ -48,6 +46,9 @@ public class Enemy : MonoBehaviour, IDamageable
     private Renderer[] meshRenderers;
     private Color[] originalColors;
     private Coroutine flashCoroutine;
+    
+    // --- YENİ EKLENEN KISIM: Performans için Property Block ---
+    private MaterialPropertyBlock propBlock;
 
     private void Awake()
     {
@@ -73,14 +74,17 @@ public class Enemy : MonoBehaviour, IDamageable
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         }
 
+        // --- OPTİMİZASYON: Materyal kopyalamayı engelledik ---
         meshRenderers = GetComponentsInChildren<Renderer>();
         originalColors = new Color[meshRenderers.Length];
+        propBlock = new MaterialPropertyBlock();
 
         for (int i = 0; i < meshRenderers.Length; i++)
         {
-            if (meshRenderers[i].material.HasProperty("_Color"))
+            // .material yerine .sharedMaterial kullanmak kopyalamayı önler!
+            if (meshRenderers[i].sharedMaterial != null && meshRenderers[i].sharedMaterial.HasProperty("_Color"))
             {
-                originalColors[i] = meshRenderers[i].material.color;
+                originalColors[i] = meshRenderers[i].sharedMaterial.color;
             }
         }
     }
@@ -94,11 +98,7 @@ public class Enemy : MonoBehaviour, IDamageable
         isDead = false;
         lastAttackTime = 0f;
 
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero;
-        }
-
+        if (rb != null) rb.linearVelocity = Vector3.zero;
         if (anim != null) anim.SetBool("isMoving", true);
 
         ResetColor();
@@ -155,19 +155,19 @@ public class Enemy : MonoBehaviour, IDamageable
         if (flashCoroutine != null) StopCoroutine(flashCoroutine);
         flashCoroutine = StartCoroutine(FlashRoutine());
 
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+        if (currentHealth <= 0) Die();
     }
 
     private IEnumerator FlashRoutine()
     {
+        // --- OPTİMİZASYON: Property Block ile renk değiştirme ---
         for (int i = 0; i < meshRenderers.Length; i++)
         {
-            if (meshRenderers[i].material.HasProperty("_Color"))
+            if (meshRenderers[i] != null && meshRenderers[i].sharedMaterial.HasProperty("_Color"))
             {
-                meshRenderers[i].material.color = hitColor;
+                meshRenderers[i].GetPropertyBlock(propBlock);
+                propBlock.SetColor("_Color", hitColor);
+                meshRenderers[i].SetPropertyBlock(propBlock);
             }
         }
 
@@ -180,9 +180,11 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         for (int i = 0; i < meshRenderers.Length; i++)
         {
-            if (meshRenderers[i].material.HasProperty("_Color"))
+            if (meshRenderers[i] != null && meshRenderers[i].sharedMaterial.HasProperty("_Color"))
             {
-                meshRenderers[i].material.color = originalColors[i];
+                meshRenderers[i].GetPropertyBlock(propBlock);
+                propBlock.SetColor("_Color", originalColors[i]);
+                meshRenderers[i].SetPropertyBlock(propBlock);
             }
         }
     }
@@ -192,49 +194,27 @@ public class Enemy : MonoBehaviour, IDamageable
         if (isDead) return;
         isDead = true;
 
-        if (KillManager.Instance != null)
-        {
-            KillManager.Instance.AddKill();
-        }
+        if (KillManager.Instance != null) KillManager.Instance.AddKill();
 
         if (XPPool.Instance != null && (xpPrefab != null || XPPool.Instance.xpPrefab != null))
         {
             GameObject xp = XPPool.Instance.GetXP(xpPrefab);
-            if (xp != null)
-            {
-                xp.transform.position = new Vector3(transform.position.x, 0.5f, transform.position.z);
-            }
-            else
-            {
-                Debug.LogError("🔴 DIKKAT: XPPool aktif ama dondurecek XP Prefab bulamadi!");
-            }
+            if (xp != null) xp.transform.position = new Vector3(transform.position.x, 0.5f, transform.position.z);
         }
         else if (xpPrefab != null)
         {
             Instantiate(xpPrefab, new Vector3(transform.position.x, 0.5f, transform.position.z), Quaternion.identity);
         }
 
-        // --- YENİ EKLENEN KISIM: %2 ŞANSLA MIKNATIS VEYA HIZ DÜŞÜRME ---
         float randomValue = Random.Range(0f, 100f);
-
         if (randomValue <= dropChance)
         {
-            // Şans tuttu! Şimdi yazı tura atıp hangisinin düşeceğini seçiyoruz
             float secondRoll = Random.Range(0f, 100f);
             Vector3 dropPos = new Vector3(transform.position.x, 0.5f, transform.position.z);
 
-            if (secondRoll <= 50f && magnetPrefab != null)
-            {
-                // %50 ihtimalle Mıknatıs
-                Instantiate(magnetPrefab, dropPos, Quaternion.identity);
-            }
-            else if (secondRoll > 50f && speedPowerUpPrefab != null)
-            {
-                // %50 ihtimalle Hız Nesnesi
-                Instantiate(speedPowerUpPrefab, dropPos, Quaternion.identity);
-            }
+            if (secondRoll <= 50f && magnetPrefab != null) Instantiate(magnetPrefab, dropPos, Quaternion.identity);
+            else if (secondRoll > 50f && speedPowerUpPrefab != null) Instantiate(speedPowerUpPrefab, dropPos, Quaternion.identity);
         }
-        // -----------------------------------------------------
 
         if (waveManager != null) waveManager.OnEnemyDefeated();
 
@@ -245,13 +225,7 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         ResetColor();
 
-        if (EnemyPool.Instance != null)
-        {
-            EnemyPool.Instance.ReturnEnemy(this.gameObject, myType);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        if (EnemyPool.Instance != null) EnemyPool.Instance.ReturnEnemy(this.gameObject, myType);
+        else Destroy(gameObject);
     }
 }

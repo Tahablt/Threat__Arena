@@ -103,8 +103,19 @@ public class UpgradeManager : MonoBehaviour
                 AuraWeapon aura = playerCharacter.GetComponentInChildren<AuraWeapon>(true);
                 if (aura != null)
                 {
-                    if (!aura.gameObject.activeSelf) aura.gameObject.SetActive(true);
-                    else { aura.IncreaseRange(0.5f); aura.damage += 2f; }
+                    // Eğer aura kapalıysa ilk kez aç (Level 1)
+                    if (!aura.gameObject.activeSelf) 
+                    {
+                        aura.gameObject.SetActive(true);
+                        Debug.Log("Aura ilk kez aktif edildi!");
+                    }
+                    else 
+                    {
+                        // Zaten açıksa senin istediğin değerlerde güçlendir:
+                        aura.IncreaseRange(0.1f);   // Menzili (Scale) 0.1 artırır
+                        aura.IncreaseDamage(10f);   // Hasarı tam 10 artırır
+                        Debug.Log("Aura Güçlendi! Yeni Hasar: " + aura.damage + " | Yeni Menzil: " + aura.auraRange);
+                    }
                 }
                 break;
 
