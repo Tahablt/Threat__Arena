@@ -98,14 +98,16 @@ public class PlayerHealth : MonoBehaviour
     {
         if (healthSlider != null)
         {
-            healthSlider.DOValue(currentHealth, 0.5f).SetEase(Ease.OutCubic);
+            // ÇÖZÜM 1: Slider yok olursa animasyonu iptal et!
+            healthSlider.DOValue(currentHealth, 0.5f).SetEase(Ease.OutCubic).SetLink(healthSlider.gameObject);
         }
     }
 
     private void Die()
     {
         isDead = true;
-        DOVirtual.DelayedCall(.5f, () => { Time.timeScale = 0; });
+        // GÜVENLİK: Bu gecikmeli işlemi de objeye bağladık ki sahne aniden kapanırsa hata vermesin
+        DOVirtual.DelayedCall(.5f, () => { Time.timeScale = 0; }).SetLink(gameObject);
 
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
     }
@@ -114,5 +116,15 @@ public class PlayerHealth : MonoBehaviour
     {
         Time.timeScale = 1;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    // ÇÖZÜM 2: Sahne yeniden yüklendiğinde (veya obje silindiğinde) arkada çalışan DOTween'leri zorla öldür
+    private void OnDestroy()
+    {
+        if (healthSlider != null)
+        {
+            healthSlider.DOKill();
+        }
+        transform.DOKill();
     }
 }

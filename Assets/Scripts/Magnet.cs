@@ -1,5 +1,6 @@
 using UnityEngine;
 using DG.Tweening;
+using System.Collections.Generic; // Listeler için bu kütüphaneyi ekledik
 
 public class Magnet : MonoBehaviour
 {
@@ -20,7 +21,7 @@ public class Magnet : MonoBehaviour
 
     [Header("Ses Ayarları")]
     public AudioClip magnetSound;
-    [Range(0f, 1f)] public float soundVolume = 1f; // YENİ: Mıknatıs sesi seviyesi
+    [Range(0f, 1f)] public float soundVolume = 1f;
 
     private bool isCollected = false;
 
@@ -57,15 +58,22 @@ public class Magnet : MonoBehaviour
             GameObject xPool = GameObject.Find(poolObjectName);
             if (xPool != null)
             {
-                int index = 0;
+                // ÇÖZÜM: Önce sahnedeki tüm aktif XP'leri güvenli bir List'e kopyalıyoruz
+                List<Transform> activeXPs = new List<Transform>();
                 foreach (Transform child in xPool.transform)
                 {
                     if (child.gameObject.activeInHierarchy)
                     {
-                        float delay = index * delayBetweenXps;
-                        MoveXpToPlayer(child, other.transform, xPool.transform, delay);
-                        index++;
+                        activeXPs.Add(child);
                     }
+                }
+
+                // Daha sonra oluşturduğumuz bu listeden sırayla çekim işlemini başlatıyoruz
+                // Böylece objenin parent'ı değişse bile döngü (sayım) bozulmuyor!
+                for (int i = 0; i < activeXPs.Count; i++)
+                {
+                    float delay = i * delayBetweenXps;
+                    MoveXpToPlayer(activeXPs[i], other.transform, xPool.transform, delay);
                 }
             }
 
@@ -80,7 +88,7 @@ public class Magnet : MonoBehaviour
     {
         xp.DOKill();
         Vector3 originalScale = xp.localScale;
-        xp.SetParent(player, true);
+        xp.SetParent(player, true); 
 
         Sequence xpSequence = DOTween.Sequence();
         xpSequence.AppendInterval(delay);
@@ -89,9 +97,19 @@ public class Magnet : MonoBehaviour
 
         xpSequence.OnComplete(() =>
         {
-            xp.gameObject.SetActive(false);
+            // Boyutu ve konumu sıfırla
             xp.SetParent(poolRoot);
             xp.localScale = originalScale;
+            
+            // DİKKAT: XP'yi manuel olarak kapatmak yerine Havuz'un kendi sistemine teslim ediyoruz!
+            if (XPPool.Instance != null)
+            {
+                XPPool.Instance.ReturnXP(xp.gameObject);
+            }
+            else
+            {
+                xp.gameObject.SetActive(false);
+            }
         });
     }
 

@@ -6,7 +6,7 @@ public class KillManager : MonoBehaviour
     public static KillManager Instance;
 
     [Header("UI Elementleri")]
-    public TextMeshProUGUI killCountText;     // Ekranda "Kills: 0" yazacak yer
+    public TextMeshProUGUI killCountText;     // Ekranda "Kesilen Mob: 0" yazacak yer
     public GameObject newRecordPanel;         // Rekor kırıldığında açılacak Canvas
     public TextMeshProUGUI highRecordText; 
     public TextMeshProUGUI killCountTextPanel;    
@@ -17,10 +17,22 @@ public class KillManager : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        // --- 1. GÜVENLİ SINGLETON ---
+        // Sahnede birden fazla KillManager olmasını kesin olarak engeller
+        if (Instance == null) 
+        {
+            Instance = this;
+        } 
+        else 
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         // Kayıtlı en iyi öldürme sayısını çek
         bestKills = PlayerPrefs.GetInt("BestKills", 0);
         UpdateUI();
+        
         if (newRecordPanel != null) newRecordPanel.SetActive(false);
     }
 
@@ -32,35 +44,45 @@ public class KillManager : MonoBehaviour
         // Eğer mevcut öldürme sayısı eski rekoru geçtiyse
         if (totalKills > bestKills)
         {
-            if (!recordAnnounced && bestKills > 0) // İlk oyunda değil, sadece rekor geçilince
+            // İlk oyunda değil, sadece var olan bir rekor geçilince paneli göster
+            if (!recordAnnounced && bestKills > 0) 
             {
                 recordAnnounced = true;
                 ShowRecordUI();
             }
 
             bestKills = totalKills;
-            PlayerPrefs.SetInt("BestKills", bestKills); // Yeni rekoru kaydet
+            PlayerPrefs.SetInt("BestKills", bestKills); // Yeni rekoru anında kaydet
         }
     }
 
-    void UpdateUI()
+    private void UpdateUI()
     {
-        if (killCountText != null) killCountText.text = "Kesilen Mob:  " + totalKills;
-        if (killCountTextPanel != null) killCountTextPanel.text = "Skor:  " + totalKills;
+        if (killCountText != null) killCountText.text = "Kesilen Mob: " + totalKills;
+        if (killCountTextPanel != null) killCountTextPanel.text = "Skor: " + totalKills;
     }
 
-    void ShowRecordUI()
+    private void ShowRecordUI()
     {
         if (newRecordPanel != null)
         {
             newRecordPanel.SetActive(true);
-            if (highRecordText != null) highRecordText.text = "NEW RECORD!";
-            Invoke("HideRecordUI", 3f); // 3 saniye sonra kapat
+            if (highRecordText != null) highRecordText.text = "YENİ REKOR!";
+            
+            // --- 2. OPTİMİZASYON: String yerine nameof kullanımı ---
+            // İleride HideRecordUI adını değiştirirsen Unity artık seni uyaracaktır.
+            Invoke(nameof(HideRecordUI), 3f); 
         }
     }
 
-    void HideRecordUI()
+    private void HideRecordUI()
     {
         if (newRecordPanel != null) newRecordPanel.SetActive(false);
+    }
+
+    // YENİ: Başka scriptlerden (örneğin oyun sonu ekranında) toplam skoru çekebilmen için eklendi
+    public int GetTotalKills()
+    {
+        return totalKills;
     }
 }

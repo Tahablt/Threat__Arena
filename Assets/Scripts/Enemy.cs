@@ -12,7 +12,8 @@ public class Enemy : MonoBehaviour, IDamageable
     public float stopDistance = 1.2f;
 
     [Header("Zorluk Ayarlari")]
-    public float healthIncreasePerMinute = 20f;
+    // --- GÜNCELLEME: Dakika başı can artışı 100'e çıkarıldı! ---
+    public float healthIncreasePerMinute = 100f;
     private float baseMaxHealth;
 
     [Header("Saldiri Ayarlari")]
@@ -47,7 +48,7 @@ public class Enemy : MonoBehaviour, IDamageable
     private Color[] originalColors;
     private Coroutine flashCoroutine;
     
-    // --- YENİ EKLENEN KISIM: Performans için Property Block ---
+    // Performans için Property Block
     private MaterialPropertyBlock propBlock;
 
     private void Awake()
@@ -74,14 +75,13 @@ public class Enemy : MonoBehaviour, IDamageable
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         }
 
-        // --- OPTİMİZASYON: Materyal kopyalamayı engelledik ---
+        // OPTİMİZASYON: Materyal kopyalamayı engelledik
         meshRenderers = GetComponentsInChildren<Renderer>();
         originalColors = new Color[meshRenderers.Length];
         propBlock = new MaterialPropertyBlock();
 
         for (int i = 0; i < meshRenderers.Length; i++)
         {
-            // .material yerine .sharedMaterial kullanmak kopyalamayı önler!
             if (meshRenderers[i].sharedMaterial != null && meshRenderers[i].sharedMaterial.HasProperty("_Color"))
             {
                 originalColors[i] = meshRenderers[i].sharedMaterial.color;
@@ -160,7 +160,6 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private IEnumerator FlashRoutine()
     {
-        // --- OPTİMİZASYON: Property Block ile renk değiştirme ---
         for (int i = 0; i < meshRenderers.Length; i++)
         {
             if (meshRenderers[i] != null && meshRenderers[i].sharedMaterial.HasProperty("_Color"))

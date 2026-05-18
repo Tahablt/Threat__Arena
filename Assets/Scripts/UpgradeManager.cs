@@ -23,6 +23,9 @@ public class UpgradeManager : MonoBehaviour
     public AudioClip levelUpSound;    
 
     private List<ItemData> rastgeleItemler;
+    
+    // Çoklu tıklama bug'ını çözen güvenlik kilidi
+    private bool isUpgrading = false; 
 
     private void Start()
     {
@@ -33,6 +36,8 @@ public class UpgradeManager : MonoBehaviour
     {
         Time.timeScale = 0;
         levelUpPanel.SetActive(true);
+        
+        isUpgrading = true;
 
         if (uiAudioSource != null && levelUpSound != null)
         {
@@ -56,6 +61,10 @@ public class UpgradeManager : MonoBehaviour
 
     public void OnClick_SelectButton(ItemData data)
     {
+        if (!isUpgrading) return; 
+        
+        isUpgrading = false; 
+
         saveData.AddItem(data.id);
         ApplyItemEffect(data.itemType);
 
@@ -110,28 +119,15 @@ public class UpgradeManager : MonoBehaviour
                     if (!bow.gameObject.activeSelf)
                     {
                         bow.gameObject.SetActive(true);
-                        Debug.Log("Ok Sistemi İlk Kez Aktif Edildi! Başlangıç Hasarı: " + bow.arrowDamage);
                     }
                     else
                     {
-                        // --- KONTROLLÜ OK GELİŞTİRME DÜZELTMESİ ---
-                        
-                        // 1. Hasarı tam olarak +3 artırıyoruz (Asla katlanarak 100'e fırlamaz)
-                        bow.arrowDamage += 3f;
+                        // --- FİRE RATE SABİT BIRAKILDI ---
+                        bow.arrowDamage += 3f; // Hasar 3 artar
+                        bow.bowLevel += 1;     // Yan yana atılacak ok sayısı 1 artar
 
-                        // 2. Bekleme süresini (fireRate) her tıkta %15 azaltarak atışı hızlandırıyoruz.
-                        // En fazla 0.3 saniyede bire kadar düşebilir (Makineli tüfeğe dönmesin diye sınır koyduk)
-                        bow.fireRate = Mathf.Max(0.3f, bow.fireRate * 0.85f); 
-                        
-                        // 3. Çoklu atış seviyesini artırıyoruz (Yan yana oklar)
-                        bow.bowLevel += 1; 
-
-                        Debug.Log($"[OK UPGRADE] Seviye: {bow.bowLevel} | Yeni Hasar: {bow.arrowDamage} | Yeni Atış Bekleme Süresi: {bow.fireRate} sn");
+                        Debug.Log($"[OK UPGRADE] Seviye: {bow.bowLevel} | Yeni Hasar: {bow.arrowDamage} | Atış Süresi Sabit Kaldı: {bow.fireRate} sn");
                     }
-                }
-                else
-                {
-                    Debug.LogError("HATA: Karakterin altında BowSystem bulunamadı!");
                 }
                 break;
 
