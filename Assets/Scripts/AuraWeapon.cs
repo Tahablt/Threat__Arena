@@ -73,7 +73,7 @@ public class AuraWeapon : MonoBehaviour
         // 1. FİZİKSEL DÜZELTME: Ana objenin scale değerini sabit tutup, doğrudan Collider yarıçapını büyüterek hatayı engelliyoruz!
         if (auraCollider != null)
         {
-            auraCollider.radius = auraRange;
+           // auraCollider.radius = auraRange;
         }
 
         // 2. GÖRSEL DÜZELTME: Eğer görsel efektin de büyümesini istiyorsan sadece çocuk görseli büyütüyoruz

@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   id: bow_01
   itemType: 3
-  itemName: Yay
-  description: "D\xFC\u015Fmanlara ok f\u0131rlat\u0131p hasar vurur"
+  itemName: Alev Topu
+  description: "D\xFC\u015Fmanlara top \u015Feklinde alev f\u0131rlat\u0131p hasar
+    vurur"
   rarity: 0
-  icon: {fileID: 21300000, guid: a547d4c9b5d74424085d85c1a8c08fe4, type: 3}
+  icon: {fileID: 21300000, guid: e4d44ec1f54ba7644bca2ad912c65ffa, type: 3}

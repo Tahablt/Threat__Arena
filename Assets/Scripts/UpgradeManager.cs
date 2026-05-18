@@ -15,14 +15,12 @@ public class UpgradeManager : MonoBehaviour
     public Character playerCharacter;
 
     [Header("Kılıç Büyüme Ayarları")]
-    [Tooltip("Büyümesini istediğin kılıç nesnesini buraya sürükle.")]
     public Transform swordTransform;
-    [Tooltip("Kılıç her seçildiğinde X, Y ve Z ekseninde ne kadar büyüyecek?")]
     public float scaleSize = 0.2f;
 
     [Header("Ses Ayarları")]
-    public AudioSource uiAudioSource; // Level Up panelinde sesi çalacak alet
-    public AudioClip levelUpSound;    // Level Up olduğunda çalacak ses dosyası
+    public AudioSource uiAudioSource; 
+    public AudioClip levelUpSound;    
 
     private List<ItemData> rastgeleItemler;
 
@@ -36,14 +34,11 @@ public class UpgradeManager : MonoBehaviour
         Time.timeScale = 0;
         levelUpPanel.SetActive(true);
 
-        // --- YENİ EKLENEN KISIM: SESİ ÇAL ---
-        // Oyun durduğu için (Time.timeScale = 0) sesin kesilmesini engelliyoruz
         if (uiAudioSource != null && levelUpSound != null)
         {
             uiAudioSource.ignoreListenerPause = true;
             uiAudioSource.PlayOneShot(levelUpSound);
         }
-        // ------------------------------------
 
         rastgeleItemler = new List<ItemData>();
         List<ItemData> availableItems = new List<ItemData>(DataManager.Instance.tumEsyalar);
@@ -91,11 +86,6 @@ public class UpgradeManager : MonoBehaviour
                 if (swordTransform != null)
                 {
                     swordTransform.localScale += new Vector3(scaleSize, scaleSize, scaleSize);
-                    Debug.Log("Kılıç büyütüldü! Yeni Boyut: " + swordTransform.localScale);
-                }
-                else
-                {
-                    Debug.LogWarning("DİKKAT: Büyütülecek kılıç nesnesi (swordTransform) Inspector'da atanmamış!");
                 }
                 break;
 
@@ -103,18 +93,11 @@ public class UpgradeManager : MonoBehaviour
                 AuraWeapon aura = playerCharacter.GetComponentInChildren<AuraWeapon>(true);
                 if (aura != null)
                 {
-                    // Eğer aura kapalıysa ilk kez aç (Level 1)
-                    if (!aura.gameObject.activeSelf) 
-                    {
-                        aura.gameObject.SetActive(true);
-                        Debug.Log("Aura ilk kez aktif edildi!");
-                    }
+                    if (!aura.gameObject.activeSelf) aura.gameObject.SetActive(true);
                     else 
                     {
-                        // Zaten açıksa senin istediğin değerlerde güçlendir:
-                        aura.IncreaseRange(0.1f);   // Menzili (Scale) 0.1 artırır
-                        aura.IncreaseDamage(10f);   // Hasarı tam 10 artırır
-                        Debug.Log("Aura Güçlendi! Yeni Hasar: " + aura.damage + " | Yeni Menzil: " + aura.auraRange);
+                        aura.IncreaseRange(0.1f);   
+                        aura.IncreaseDamage(10f);   
                     }
                 }
                 break;
@@ -127,20 +110,28 @@ public class UpgradeManager : MonoBehaviour
                     if (!bow.gameObject.activeSelf)
                     {
                         bow.gameObject.SetActive(true);
-                        Debug.Log("Ok Sistemi Aktif Edildi! Otomatik ateş başlıyor.");
+                        Debug.Log("Ok Sistemi İlk Kez Aktif Edildi! Başlangıç Hasarı: " + bow.arrowDamage);
                     }
                     else
                     {
-                        bow.fireRate = Mathf.Max(0.2f, bow.fireRate - 0.05f);
+                        // --- KONTROLLÜ OK GELİŞTİRME DÜZELTMESİ ---
+                        
+                        // 1. Hasarı tam olarak +3 artırıyoruz (Asla katlanarak 100'e fırlamaz)
                         bow.arrowDamage += 3f;
-                        bow.arrowsPerShot += 1;
 
-                        Debug.Log("Ok Geliştirildi! Yeni Ok Sayısı: " + bow.arrowsPerShot);
+                        // 2. Bekleme süresini (fireRate) her tıkta %15 azaltarak atışı hızlandırıyoruz.
+                        // En fazla 0.3 saniyede bire kadar düşebilir (Makineli tüfeğe dönmesin diye sınır koyduk)
+                        bow.fireRate = Mathf.Max(0.3f, bow.fireRate * 0.85f); 
+                        
+                        // 3. Çoklu atış seviyesini artırıyoruz (Yan yana oklar)
+                        bow.bowLevel += 1; 
+
+                        Debug.Log($"[OK UPGRADE] Seviye: {bow.bowLevel} | Yeni Hasar: {bow.arrowDamage} | Yeni Atış Bekleme Süresi: {bow.fireRate} sn");
                     }
                 }
                 else
                 {
-                    Debug.LogError("HATA: Karakterin altında BowSystem (Ok Atma Scripti) bulunamadı!");
+                    Debug.LogError("HATA: Karakterin altında BowSystem bulunamadı!");
                 }
                 break;
 

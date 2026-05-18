@@ -3,16 +3,22 @@ using System.Collections;
 
 public class BowSystem : MonoBehaviour
 {
-    [Header("Ayarlar")]
+    [Header("Yay Ayarlari")]
     public GameObject arrowPrefab;      
     public Transform firePoint;         
-    public float fireRate = 1.5f;       
+    [Tooltip("Atışlar arasındaki saniye aralığı. Azaldıkça daha hızlı ateş eder.")]
+    public float fireRate = 4f; // İSTEDİĞİN GİBİ 4 SANİYEYE AYARLANDI       
     public float range = 10f;           
     public float arrowDamage = 10f;     
     public float arrowSpeed = 25f;      
 
-    public int arrowsPerShot = 1;       
-    public float timeBetweenArrows = 0.15f; 
+    [Header("LEVEL SİSTEMİ (Çoklu Atış)")]
+    public int bowLevel = 1;            
+    public float spreadDistance = 0.5f; 
+
+    [Header("Radar ve Optimizasyon")]
+    public LayerMask enemyLayer; 
+    private static Collider[] sharedColliders = new Collider[50]; 
 
     [Header("Ses Ayarlari")]
     public AudioClip bowFireSound;      
@@ -24,19 +30,21 @@ public class BowSystem : MonoBehaviour
     void Start()
     {
         audioSource = GetComponentInParent<AudioSource>();
+        // İlk doğuşta hemen ateş edebilsin diye countdown sıfırlanır
+        fireCountdown = 0f;
     }
 
     void Update()
     {
-        if (target == null || Vector3.Distance(transform.position, target.position) > range)
+        if (target == null || !target.gameObject.activeInHierarchy || Vector3.Distance(transform.position, target.position) > range)
         {
             FindNearestEnemy();
         }
 
-        if (fireCountdown <= 0f && target != null)
+        if (fireCountdown <= 0f && target != null && target.gameObject.activeInHierarchy)
         {
-            StartCoroutine(ShootBurst());
-            fireCountdown = 1f / fireRate;
+            ShootArrows();
+            fireCountdown = fireRate; 
         }
 
         fireCountdown -= Time.deltaTime;
@@ -44,50 +52,51 @@ public class BowSystem : MonoBehaviour
 
     void FindNearestEnemy()
     {
-        // --- OPTİMİZASYON: Tüm haritayı değil, sadece etrafındaki küreyi tarar ---
-        Collider[] hitColliders = Physics.OverlapSphere(transform.position, range);
+        int hitCount = Physics.OverlapSphereNonAlloc(transform.position, range, sharedColliders, enemyLayer);
         float shortestDistance = Mathf.Infinity;
         Transform nearestEnemy = null;
 
-        foreach (var hitCollider in hitColliders)
+        for (int i = 0; i < hitCount; i++)
         {
-            if (hitCollider.CompareTag("Enemy"))
+            if (!sharedColliders[i].gameObject.activeInHierarchy) continue;
+
+            float distanceToEnemy = Vector3.Distance(transform.position, sharedColliders[i].transform.position);
+            if (distanceToEnemy < shortestDistance)
             {
-                float distanceToEnemy = Vector3.Distance(transform.position, hitCollider.transform.position);
-                if (distanceToEnemy < shortestDistance)
-                {
-                    shortestDistance = distanceToEnemy;
-                    nearestEnemy = hitCollider.transform;
-                }
+                shortestDistance = distanceToEnemy;
+                nearestEnemy = sharedColliders[i].transform;
             }
         }
 
         target = nearestEnemy;
     }
 
-    IEnumerator ShootBurst()
+    void ShootArrows()
     {
-        for (int i = 0; i < arrowsPerShot; i++)
+        if (target == null || !target.gameObject.activeInHierarchy) FindNearestEnemy();
+        if (target == null || !target.gameObject.activeInHierarchy) return; 
+
+        for (int j = 0; j < bowLevel; j++)
         {
-            if (target == null) FindNearestEnemy();
-            if (target == null) break; 
-
             GameObject arrowGO = ArrowPool.Instance.GetArrow();
-            arrowGO.transform.position = firePoint.position;
-            arrowGO.transform.rotation = firePoint.rotation;
-            Arrow arrow = arrowGO.GetComponent<Arrow>();
+            if (arrowGO == null) continue;
+            
+            float offset = (j - (bowLevel - 1) / 2f) * spreadDistance;
+            Vector3 spawnPos = firePoint.position + firePoint.right * offset;
 
+            arrowGO.transform.position = spawnPos;
+            arrowGO.transform.rotation = firePoint.rotation;
+            
+            Arrow arrow = arrowGO.GetComponent<Arrow>();
             if (arrow != null)
             {
                 arrow.Seek(target, arrowDamage, arrowSpeed);
             }
+        }
 
-            if (audioSource != null && bowFireSound != null)
-            {
-                audioSource.PlayOneShot(bowFireSound);
-            }
-
-            yield return new WaitForSeconds(timeBetweenArrows);
+        if (audioSource != null && bowFireSound != null)
+        {
+            audioSource.PlayOneShot(bowFireSound);
         }
     }
 }

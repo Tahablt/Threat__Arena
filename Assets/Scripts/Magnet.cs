@@ -12,7 +12,7 @@ public class Magnet : MonoBehaviour
     public float scaleDuration = 0.4f;
 
     [Header("XP (Havuz) Çekim Ayarları")]
-    public string poolObjectName = "XPool";
+    public string poolObjectName = "XPPool";
     public float xpMoveDuration = 0.8f;
     public float xpScaleDuration = 0.3f;
     public float targetYOffset = 1.2f;

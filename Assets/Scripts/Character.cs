@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using TMPro;
 
 public class Character : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class Character : MonoBehaviour
     [Header("Combat Settings")]
     public float attackDamage = 10f;
     public float vfxScaleMultiplier = 1f;
+    [SerializeField] private float attackDuration = 0.5f; 
 
     [Header("Audio Settings")]
     public AudioSource audioSource;
@@ -29,6 +31,7 @@ public class Character : MonoBehaviour
     [SerializeField] private Button fireButton;
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private GameObject dashEffectPrefab;
+    [SerializeField] private Slider speedSlider; // YENİ: Slider eklendi (C# standartlarına göre küçük harfle başlattım)
 
     private CharacterController characterController;
     private Animator animator;
@@ -45,15 +48,17 @@ public class Character : MonoBehaviour
 
     private Vector2 joystickInput;
     private bool fireInput;
+    private bool isAttacking = false; 
 
     public System.Action OnDashStart;
     public System.Action OnDashEnd;
     public System.Action OnFire;
 
-    // --- YEN� S�STEM ���N DE���KENLER (S�re Uzatma) ---
+    // --- SÜRE UZATMA SİSTEMİ İÇİN DEĞİŞKENLER ---
     private bool isSpeedBoostActive = false;
     private float speedBoostEndTime = 0f;
     private float appliedBoostAmount = 0f;
+    private float currentSpeedBoostMaxDuration = 0f; // YENİ: Slider'ın maksimum değerini ayarlamak için toplam süreyi tutar
     // --------------------------------------------------
 
     void Start()
@@ -68,9 +73,12 @@ public class Character : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
 
         if (cameraTransform == null) cameraTransform = Camera.main.transform;
-        if (movementJoystick == null) Debug.LogError("Joystick atanmam��!");
+        if (movementJoystick == null) Debug.LogError("Joystick atanmamış!");
 
         currentSpeed = moveSpeed;
+
+        // YENİ: Oyun başladığında UI'ları kapalı tut
+        if (speedSlider != null) speedSlider.gameObject.SetActive(false);
     }
 
     void SetupUIButtons()
@@ -79,11 +87,11 @@ public class Character : MonoBehaviour
         if (fireButton != null) fireButton.onClick.AddListener(OnFireButtonPressed);
     }
 
-    // --- UPGRADE FONKS�YONLARI ---
+    // --- UPGRADE FONKSİYONLARI ---
     public void IncreaseDamage(float amount)
     {
         attackDamage += amount;
-        Debug.Log("Sald�r� G�c� Artt�: " + attackDamage);
+        Debug.Log("Saldırı Gücü Arttı: " + attackDamage);
     }
 
     public void IncreaseMoveSpeed(float amount)
@@ -93,45 +101,54 @@ public class Character : MonoBehaviour
             moveSpeed += amount;
             moveSpeed = Mathf.Min(moveSpeed, maxMoveSpeed);
             currentSpeed = moveSpeed;
-            Debug.Log("Hareket H�z� Artt�: " + moveSpeed);
+            Debug.Log("Hareket Hızı Arttı: " + moveSpeed);
         }
         else
         {
-            Debug.Log("Maksimum h�za zaten ula��ld�!");
+            Debug.Log("Maksimum hıza zaten ulaşıldı!");
         }
     }
 
     public void ReduceDashCooldown(float amount)
     {
         dashCooldown = Mathf.Max(0.2f, dashCooldown - amount);
-        Debug.Log("Dash Bekleme S�resi Azald�: " + dashCooldown);
+        Debug.Log("Dash Bekleme Süresi Azaldı: " + dashCooldown);
     }
 
     public void IncreaseVFXScale(float amount)
     {
         vfxScaleMultiplier += amount;
-        Debug.Log("K�l�� Boyu Artt�! Yeni �arpan: " + vfxScaleMultiplier);
+        Debug.Log("Kılıç Boyu Arttı! Yeni Çarpan: " + vfxScaleMultiplier);
     }
 
-    // --- S�RES� UZAYAN (STACKLENMEYEN) HIZ S�STEM� ---
+    // --- SÜRESİ UZAYAN (STACKLENMEYEN) HIZ SİSTEMİ ---
     public void ApplyTemporarySpeedBoost(float amount, float duration)
     {
         if (isSpeedBoostActive)
         {
-            // Zaten aktifse sadece s�reyi uzat
             speedBoostEndTime += duration;
-            Debug.Log("H�z Botu s�resi uzat�ld�! Yeni biti�e kalan s�re: " + (speedBoostEndTime - Time.time));
+            currentSpeedBoostMaxDuration += duration; // Slider'ın sınırını da genişlet
+
+            if (speedSlider != null) speedSlider.maxValue = currentSpeedBoostMaxDuration;
+            
+            Debug.Log("Hız Botu süresi uzatıldı! Yeni bitişe kalan süre: " + (speedBoostEndTime - Time.time));
         }
         else
         {
-            // �lk kez al�n�yorsa h�z� art�r ve sayac� ba�lat
             isSpeedBoostActive = true;
             appliedBoostAmount = amount;
             speedBoostEndTime = Time.time + duration;
+            currentSpeedBoostMaxDuration = duration; // Yeni alınan botun süresini Slider'ın max değeri yap
+
+            if (speedSlider != null)
+            {
+                speedSlider.maxValue = currentSpeedBoostMaxDuration;
+                speedSlider.value = currentSpeedBoostMaxDuration;
+            }
 
             moveSpeed += amount;
             currentSpeed = moveSpeed;
-            Debug.Log("H�z Botu �lk Kez Aktif! Yeni H�z: " + moveSpeed);
+            Debug.Log("Hız Botu İlk Kez Aktif! Yeni Hız: " + moveSpeed);
 
             StartCoroutine(SpeedBoostRoutine());
         }
@@ -139,21 +156,18 @@ public class Character : MonoBehaviour
 
     private IEnumerator SpeedBoostRoutine()
     {
-        // Zamanlay�c�: Mevcut zaman, biti� zaman�na ula�ana kadar bekler
         while (Time.time < speedBoostEndTime)
         {
-            yield return null; // Bir sonraki kareye (frame) kadar bekle
+            yield return null; 
         }
 
-        // S�re dolunca h�z� B�R KERE eski haline getir
         moveSpeed -= appliedBoostAmount;
         currentSpeed = moveSpeed;
         isSpeedBoostActive = false;
         appliedBoostAmount = 0f;
 
-        Debug.Log("H�z Botu S�resi Doldu. H�z Eski Haline D�nd�: " + moveSpeed);
+        Debug.Log("Hız Botu Süresi Doldu. Hız Eski Haline Döndü: " + moveSpeed);
     }
-    // ---------------------------------------------------
 
     void Update()
     {
@@ -180,11 +194,13 @@ public class Character : MonoBehaviour
         ApplyMovement();
         UpdateAnimations();
         UpdateDashCooldown();
+        
+        // UI Güncellemesi
+        UpdateSpeedBoostUI(); 
     }
 
     void HandleInput()
     {
-        // 1. �nce Joystick verilerini alal�m (Ekrana dokunuluyorsa)
         float h = 0f;
         float v = 0f;
 
@@ -194,30 +210,23 @@ public class Character : MonoBehaviour
             v = movementJoystick.Vertical;
         }
 
-        // 2. Klavye verilerini alal�m (W, A, S, D veya Y�n Tu�lar�)
         float keyboardH = Input.GetAxisRaw("Horizontal");
         float keyboardV = Input.GetAxisRaw("Vertical");
 
-        // 3. E�er klavyeden bir tu�a bas�l�yorsa, Joystick'i ez ve Klavyeyi kullan
         if (Mathf.Abs(keyboardH) > 0.1f || Mathf.Abs(keyboardV) > 0.1f)
         {
             h = keyboardH;
             v = keyboardV;
         }
 
-        // 4. Sonucu karaktere ilet
         joystickInput = new Vector2(h, v);
         if (joystickInput.magnitude > 1f) joystickInput.Normalize();
 
-        // --- B�LG�SAYAR TEST� ���N KLAVYE KISAYOLLARI ---
-
-        // Bo�luk (Space) tu�u ile Dash atma
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (canDash && !isDashing) StartDash();
         }
 
-        // Fare Sol T�k ile Vuru� yapma
         if (Input.GetMouseButtonDown(0))
         {
             fireInput = true;
@@ -321,7 +330,7 @@ public class Character : MonoBehaviour
 
     void HandleFire()
     {
-        if (fireInput)
+        if (fireInput && !isAttacking)
         {
             OnFire?.Invoke();
             if (animator != null)
@@ -334,8 +343,45 @@ public class Character : MonoBehaviour
                 audioSource.PlayOneShot(swordSwingSound);
             }
 
-            fireInput = false;
+            StartCoroutine(AttackCooldownRoutine());
         }
+        
+        fireInput = false; 
+    }
+
+    private void UpdateSpeedBoostUI()
+    {
+        if (isSpeedBoostActive)
+        {
+            float remainingTime = speedBoostEndTime - Time.time;
+
+            if (remainingTime > 0)
+            {
+                // UI Elemanları kapalıysa aç
+                    
+                if (speedSlider != null && !speedSlider.gameObject.activeSelf) 
+                    speedSlider.gameObject.SetActive(true);
+
+                // Yazıyı Güncelle
+                
+                // Slider'ı Güncelle (Float değeri doğrudan atanır)
+                if (speedSlider != null)
+                    speedSlider.value = remainingTime;
+            }
+        }
+        else
+        {
+                
+            if (speedSlider != null && speedSlider.gameObject.activeSelf) 
+                speedSlider.gameObject.SetActive(false);
+        }
+    }
+
+    private IEnumerator AttackCooldownRoutine()
+    {
+        isAttacking = true;
+        yield return new WaitForSeconds(attackDuration);
+        isAttacking = false;
     }
 
     public bool IsDashing() { return isDashing; }

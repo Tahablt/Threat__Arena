@@ -8,7 +8,8 @@ public class KillManager : MonoBehaviour
     [Header("UI Elementleri")]
     public TextMeshProUGUI killCountText;     // Ekranda "Kills: 0" yazacak yer
     public GameObject newRecordPanel;         // Rekor kırıldığında açılacak Canvas
-    public TextMeshProUGUI highRecordText;    // Rekor panelindeki yazı
+    public TextMeshProUGUI highRecordText; 
+    public TextMeshProUGUI killCountTextPanel;    
 
     private int totalKills = 0;
     private int bestKills = 0;
@@ -44,7 +45,8 @@ public class KillManager : MonoBehaviour
 
     void UpdateUI()
     {
-        if (killCountText != null) killCountText.text = "Kills: " + totalKills;
+        if (killCountText != null) killCountText.text = "Kesilen Mob:  " + totalKills;
+        if (killCountTextPanel != null) killCountTextPanel.text = "Skor:  " + totalKills;
     }
 
     void ShowRecordUI()
