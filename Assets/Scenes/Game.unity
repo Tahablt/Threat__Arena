@@ -291,6 +291,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MaleCharacterPolyart
       objectReference: {fileID: 0}
+    - target: {fileID: 9083758447949455292, guid: c564c8c0d0cdc45429417f315e9f3e41, type: 3}
+      propertyPath: m_UseGravity
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
