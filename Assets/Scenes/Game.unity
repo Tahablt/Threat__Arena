@@ -1946,7 +1946,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -117.9, y: 153}
+  m_AnchoredPosition: {x: -117.8999, y: 153}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &471336990
@@ -2090,7 +2090,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 488827843}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
@@ -2126,19 +2126,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 488827846}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &488827846
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3984,8 +3972,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281479730
-  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -4041,7 +4029,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: -20.673525, z: 0, w: -20.208927}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -5491,6 +5479,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3c0600b898393b4080be5951591947c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Character
+  playerHealth: {fileID: 1545537185}
   moveSpeed: 5
   maxMoveSpeed: 15
   rotationSpeed: 10
@@ -5534,7 +5523,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 112
+  m_Constraints: 116
   m_CollisionDetection: 0
 --- !u!114 &1545537185
 MonoBehaviour:
@@ -5554,6 +5543,7 @@ MonoBehaviour:
   gameOverPanel: {fileID: 488827843}
   hitColor: {r: 1, g: 0, b: 0, a: 1}
   flashDuration: 0.15
+  deathSound: {fileID: 8300000, guid: c56b3e5a23db95745952a50c38885ec4, type: 3}
 --- !u!114 &1545537186
 MonoBehaviour:
   m_ObjectHideFlags: 0

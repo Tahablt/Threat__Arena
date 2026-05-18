@@ -5,28 +5,32 @@ using TMPro;
 
 public class Character : MonoBehaviour
 {
-    [Header("Movement Settings")]
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private PlayerHealth playerHealth;
+
+
+    [Header("Movement Settings")] [SerializeField]
+    private float moveSpeed = 5f;
+
     [SerializeField] private float maxMoveSpeed = 15f;
     [SerializeField] private float rotationSpeed = 10f;
 
-    [Header("Dash Settings")]
-    [SerializeField] private float dashSpeed = 15f;
+    [Header("Dash Settings")] [SerializeField]
+    private float dashSpeed = 15f;
+
     [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private float dashCooldown = 1f;
     [SerializeField] private float dashInvincibilityDuration = 0.5f;
 
-    [Header("Combat Settings")]
-    public float attackDamage = 10f;
+    [Header("Combat Settings")] public float attackDamage = 10f;
     public float vfxScaleMultiplier = 1f;
-    [SerializeField] private float attackDuration = 0.5f; 
+    [SerializeField] private float attackDuration = 0.5f;
 
-    [Header("Audio Settings")]
-    public AudioSource audioSource;
+    [Header("Audio Settings")] public AudioSource audioSource;
     public AudioClip swordSwingSound;
 
-    [Header("References")]
-    [SerializeField] private FixedJoystick movementJoystick;
+    [Header("References")] [SerializeField]
+    private FixedJoystick movementJoystick;
+
     [SerializeField] private Button dashButton;
     [SerializeField] private Button fireButton;
     [SerializeField] private Transform cameraTransform;
@@ -48,7 +52,7 @@ public class Character : MonoBehaviour
 
     private Vector2 joystickInput;
     private bool fireInput;
-    private bool isAttacking = false; 
+    private bool isAttacking = false;
 
     public System.Action OnDashStart;
     public System.Action OnDashEnd;
@@ -58,7 +62,9 @@ public class Character : MonoBehaviour
     private bool isSpeedBoostActive = false;
     private float speedBoostEndTime = 0f;
     private float appliedBoostAmount = 0f;
-    private float currentSpeedBoostMaxDuration = 0f; // YENİ: Slider'ın maksimum değerini ayarlamak için toplam süreyi tutar
+
+    private float
+        currentSpeedBoostMaxDuration = 0f; // YENİ: Slider'ın maksimum değerini ayarlamak için toplam süreyi tutar
     // --------------------------------------------------
 
     void Start()
@@ -130,7 +136,7 @@ public class Character : MonoBehaviour
             currentSpeedBoostMaxDuration += duration; // Slider'ın sınırını da genişlet
 
             if (speedSlider != null) speedSlider.maxValue = currentSpeedBoostMaxDuration;
-            
+
             Debug.Log("Hız Botu süresi uzatıldı! Yeni bitişe kalan süre: " + (speedBoostEndTime - Time.time));
         }
         else
@@ -158,7 +164,7 @@ public class Character : MonoBehaviour
     {
         while (Time.time < speedBoostEndTime)
         {
-            yield return null; 
+            yield return null;
         }
 
         moveSpeed -= appliedBoostAmount;
@@ -171,6 +177,9 @@ public class Character : MonoBehaviour
 
     void Update()
     {
+        if (playerHealth.IsDead)
+            return;
+
         HandleInput();
 
         if (!isDashing)
@@ -194,9 +203,9 @@ public class Character : MonoBehaviour
         ApplyMovement();
         UpdateAnimations();
         UpdateDashCooldown();
-        
+
         // UI Güncellemesi
-        UpdateSpeedBoostUI(); 
+        UpdateSpeedBoostUI();
     }
 
     void HandleInput()
@@ -241,8 +250,10 @@ public class Character : MonoBehaviour
             Vector3 forward = cameraTransform.forward;
             Vector3 right = cameraTransform.right;
 
-            forward.y = 0; right.y = 0;
-            forward.Normalize(); right.Normalize();
+            forward.y = 0;
+            right.y = 0;
+            forward.Normalize();
+            right.Normalize();
 
             moveDirection = (forward * joystickInput.y + right * joystickInput.x).normalized;
 
@@ -283,8 +294,16 @@ public class Character : MonoBehaviour
         }
     }
 
-    void OnDashButtonPressed() { if (canDash && !isDashing) StartDash(); }
-    void OnFireButtonPressed() { fireInput = true; HandleFire(); }
+    void OnDashButtonPressed()
+    {
+        if (canDash && !isDashing) StartDash();
+    }
+
+    void OnFireButtonPressed()
+    {
+        fireInput = true;
+        HandleFire();
+    }
 
     void StartDash()
     {
@@ -307,7 +326,10 @@ public class Character : MonoBehaviour
         OnDashStart?.Invoke();
     }
 
-    IEnumerator InvincibilityDuringDash() { yield return new WaitForSeconds(dashInvincibilityDuration); }
+    IEnumerator InvincibilityDuringDash()
+    {
+        yield return new WaitForSeconds(dashInvincibilityDuration);
+    }
 
     void HandleDash()
     {
@@ -324,7 +346,8 @@ public class Character : MonoBehaviour
     {
         isDashing = false;
         currentSpeed = moveSpeed;
-        velocity.x *= 0.5f; velocity.z *= 0.5f;
+        velocity.x *= 0.5f;
+        velocity.z *= 0.5f;
         OnDashEnd?.Invoke();
     }
 
@@ -345,8 +368,8 @@ public class Character : MonoBehaviour
 
             StartCoroutine(AttackCooldownRoutine());
         }
-        
-        fireInput = false; 
+
+        fireInput = false;
     }
 
     private void UpdateSpeedBoostUI()
@@ -358,12 +381,12 @@ public class Character : MonoBehaviour
             if (remainingTime > 0)
             {
                 // UI Elemanları kapalıysa aç
-                    
-                if (speedSlider != null && !speedSlider.gameObject.activeSelf) 
+
+                if (speedSlider != null && !speedSlider.gameObject.activeSelf)
                     speedSlider.gameObject.SetActive(true);
 
                 // Yazıyı Güncelle
-                
+
                 // Slider'ı Güncelle (Float değeri doğrudan atanır)
                 if (speedSlider != null)
                     speedSlider.value = remainingTime;
@@ -371,8 +394,7 @@ public class Character : MonoBehaviour
         }
         else
         {
-                
-            if (speedSlider != null && speedSlider.gameObject.activeSelf) 
+            if (speedSlider != null && speedSlider.gameObject.activeSelf)
                 speedSlider.gameObject.SetActive(false);
         }
     }
@@ -384,8 +406,23 @@ public class Character : MonoBehaviour
         isAttacking = false;
     }
 
-    public bool IsDashing() { return isDashing; }
-    public bool CanDash() { return canDash; }
-    public Vector3 GetMoveDirection() { return moveDirection; }
-    public float GetMoveSpeed() { return currentSpeed; }
+    public bool IsDashing()
+    {
+        return isDashing;
+    }
+
+    public bool CanDash()
+    {
+        return canDash;
+    }
+
+    public Vector3 GetMoveDirection()
+    {
+        return moveDirection;
+    }
+
+    public float GetMoveSpeed()
+    {
+        return currentSpeed;
+    }
 }

@@ -11,6 +11,8 @@ public class PlayerHealth : MonoBehaviour
     public float currentHealth;
     private bool isDead = false;
 
+    public bool IsDead => isDead;
+
     [Header("UI")]
     public Slider healthSlider;
     public GameObject gameOverPanel;
@@ -19,10 +21,15 @@ public class PlayerHealth : MonoBehaviour
     public Color hitColor = Color.red;
     public float flashDuration = 0.15f;
 
+    [Header("Ses Efektleri")]
+    [SerializeField] private AudioClip deathSound; // YENİ: Ölüm ses klibi alanı
+
     private Renderer[] meshRenderers;
     private Color[] originalColors;
     private Coroutine flashCoroutine;
     private MaterialPropertyBlock propBlock;
+    private Animator animator; // YENİ: Ölme animasyonunu tetiklemek için animator referansı
+    private AudioSource audioSource; // YENİ: Ölme sesini çalmak için ses kaynağı referansı
 
     private void Start()
     {
@@ -32,6 +39,10 @@ public class PlayerHealth : MonoBehaviour
 
         UpdateHealthBar();
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
+
+        // Referansları alıyoruz
+        animator = GetComponentInChildren<Animator>();
+        audioSource = GetComponent<AudioSource>();
 
         meshRenderers = GetComponentsInChildren<Renderer>();
         originalColors = new Color[meshRenderers.Length];
@@ -98,17 +109,32 @@ public class PlayerHealth : MonoBehaviour
     {
         if (healthSlider != null)
         {
-            // ÇÖZÜM 1: Slider yok olursa animasyonu iptal et!
-            healthSlider.DOValue(currentHealth, 0.5f).SetEase(Ease.OutCubic).SetLink(healthSlider.gameObject);
+            healthSlider.DOValue(currentHealth, 0.25f).SetEase(Ease.OutCubic).SetLink(healthSlider.gameObject);
         }
     }
 
     private void Die()
     {
         isDead = true;
-        // GÜVENLİK: Bu gecikmeli işlemi de objeye bağladık ki sahne aniden kapanırsa hata vermesin
-        DOVirtual.DelayedCall(.5f, () => { Time.timeScale = 0; }).SetLink(gameObject);
 
+        // YENİ: Ölme ses efekti oynatımı
+        if (audioSource != null && deathSound != null)
+        {
+            audioSource.PlayOneShot(deathSound);
+        }
+
+        // YENİ: Ölüm animasyonunun tetiklenmesi
+        if (animator != null)
+        {
+            animator.SetTrigger("Die");
+        }
+        
+        DOVirtual.DelayedCall(2f, ShowDie, true).SetLink(gameObject);
+    }
+
+    public void ShowDie()
+    {
+        Time.timeScale = 0; 
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
     }
 
@@ -118,7 +144,6 @@ public class PlayerHealth : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    // ÇÖZÜM 2: Sahne yeniden yüklendiğinde (veya obje silindiğinde) arkada çalışan DOTween'leri zorla öldür
     private void OnDestroy()
     {
         if (healthSlider != null)
