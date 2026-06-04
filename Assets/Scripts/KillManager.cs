@@ -5,82 +5,99 @@ public class KillManager : MonoBehaviour
 {
     public static KillManager Instance;
 
-    [Header("UI Elementleri")]
-    public TextMeshProUGUI killCountText;     // Ekranda "Kesilen Mob: 0" yazacak yer
-    public GameObject newRecordPanel;         // Rekor kırıldığında açılacak Canvas
-    public TextMeshProUGUI highRecordText; 
-    public TextMeshProUGUI killCountTextPanel;    
+    [Header("UI Elementleri (Oyun İçi)")]
+    public TextMeshProUGUI killCountText;
 
+    [Header("UI Elementleri (Game Over Paneli)")]
+    public TextMeshProUGUI killCountTextPanel;
+    public TextMeshProUGUI timeSurvivedTextPanel;
+    public TextMeshProUGUI levelTextPanel;
+
+    // --- TAKİP EDİLEN DEĞERLER ---
     private int totalKills = 0;
-    private int bestKills = 0;
-    private bool recordAnnounced = false;
+    private int bestKills = 0; // Sadece hafızada tutar, ekranda göstermez
+
+    private float timeSurvived = 0f;
+    private int currentLevel = 1;
+    private bool isGameOver = false;
 
     private void Awake()
     {
-        // --- 1. GÜVENLİ SINGLETON ---
-        // Sahnede birden fazla KillManager olmasını kesin olarak engeller
-        if (Instance == null) 
+        if (Instance == null)
         {
             Instance = this;
-        } 
-        else 
+        }
+        else
         {
             Destroy(gameObject);
             return;
         }
 
-        // Kayıtlı en iyi öldürme sayısını çek
         bestKills = PlayerPrefs.GetInt("BestKills", 0);
-        UpdateUI();
-        
-        if (newRecordPanel != null) newRecordPanel.SetActive(false);
+        UpdateInGameUI();
     }
+
+    private void Update()
+    {
+        // Oyun bitmediği sürece zamanı say
+        if (!isGameOver)
+        {
+            timeSurvived += Time.deltaTime;
+        }
+    }
+
+    // ---------------------------------------------
+    // ------------- OYUN İÇİ İŞLEMLER -------------
+    // ---------------------------------------------
 
     public void AddKill()
     {
-        totalKills++;
-        UpdateUI();
+        if (isGameOver) return;
 
-        // Eğer mevcut öldürme sayısı eski rekoru geçtiyse
+        totalKills++;
+        UpdateInGameUI();
+
+        // Rekoru arka planda sessizce kaydet
         if (totalKills > bestKills)
         {
-            // İlk oyunda değil, sadece var olan bir rekor geçilince paneli göster
-            if (!recordAnnounced && bestKills > 0) 
-            {
-                recordAnnounced = true;
-                ShowRecordUI();
-            }
-
             bestKills = totalKills;
-            PlayerPrefs.SetInt("BestKills", bestKills); // Yeni rekoru anında kaydet
+            PlayerPrefs.SetInt("BestKills", bestKills);
         }
     }
 
-    private void UpdateUI()
+    // BAŞKA SCRİPTTEN ÇAĞRILACAK OLAN LEVEL GÜNCELLEME FONKSİYONU
+    public void UpdateLevel(int newLevel)
+    {
+        currentLevel = newLevel;
+    }
+
+    private void UpdateInGameUI()
     {
         if (killCountText != null) killCountText.text = "Kesilen Mob: " + totalKills;
-        if (killCountTextPanel != null) killCountTextPanel.text = "Skor: " + totalKills;
     }
 
-    private void ShowRecordUI()
+    // ---------------------------------------------
+    // ------------- OYUN SONU (GAME OVER) ---------
+    // ---------------------------------------------
+
+    public void TriggerGameOver()
     {
-        if (newRecordPanel != null)
+        isGameOver = true; // Sayacı durdur
+
+        if (killCountTextPanel != null)
+            killCountTextPanel.text = "Skor : " + totalKills;
+
+        if (levelTextPanel != null)
+            levelTextPanel.text = "Level : " + currentLevel;
+
+        if (timeSurvivedTextPanel != null)
         {
-            newRecordPanel.SetActive(true);
-            if (highRecordText != null) highRecordText.text = "YENİ REKOR!";
-            
-            // --- 2. OPTİMİZASYON: String yerine nameof kullanımı ---
-            // İleride HideRecordUI adını değiştirirsen Unity artık seni uyaracaktır.
-            Invoke(nameof(HideRecordUI), 3f); 
+            int minutes = Mathf.FloorToInt(timeSurvived / 60);
+            int seconds = Mathf.FloorToInt(timeSurvived % 60);
+            timeSurvivedTextPanel.text = string.Format("Hayatta Kalinan Sure : {0:00}:{1:00}", minutes, seconds);
         }
     }
 
-    private void HideRecordUI()
-    {
-        if (newRecordPanel != null) newRecordPanel.SetActive(false);
-    }
-
-    // YENİ: Başka scriptlerden (örneğin oyun sonu ekranında) toplam skoru çekebilmen için eklendi
     public int GetTotalKills()
     {
         return totalKills;

@@ -11,19 +11,18 @@ public class PlayerXP : MonoBehaviour
     [Header("UI")]
     public Image xpBarImage;
 
-    // --- EKSİK OLAN KISIM BURASIYDI ---
     [Header("Managerlar")]
     public UpgradeManager upgradeManager;
 
-    private void Start() 
-    { 
+    private void Start()
+    {
         if (xpBarImage == null)
         {
             Debug.LogError("🔴 DIKKAT: PlayerXP icindeki xpBarImage bos! Lutfen Unity editorunden karakterindeki PlayerXP scriptine UI XP barinin 'DOLAN RENKLI KISMINI (FILL)' surukle! Arka plani eklersen calismaz!");
         }
 
-        currentXP = 0f; 
-        UpdateXPBar(); 
+        currentXP = 0f;
+        UpdateXPBar();
     }
 
     public void AddXP(float amount)
@@ -42,7 +41,14 @@ public class PlayerXP : MonoBehaviour
     private void LevelUp()
     {
         currentXP -= xpToNextLevel;
-        currentLevel++;
+        currentLevel++; // Level burada atlıyor
+
+        // --- İŞTE BAĞLANTI BURADA! ---
+        // KillManager'a yeni levelimizi gönderiyoruz
+        if (KillManager.Instance != null)
+        {
+            KillManager.Instance.UpdateLevel(currentLevel);
+        }
 
         // YENİ FORMÜL: Çarpanı %5'e düşürüp, sabit 20 ekliyoruz. Oyun sonuna kadar akıcı ilerler.
         xpToNextLevel = Mathf.Round(xpToNextLevel * 1.05f) + 20f;

@@ -22,14 +22,14 @@ public class PlayerHealth : MonoBehaviour
     public float flashDuration = 0.15f;
 
     [Header("Ses Efektleri")]
-    [SerializeField] private AudioClip deathSound; // YENİ: Ölüm ses klibi alanı
+    [SerializeField] private AudioClip deathSound;
 
     private Renderer[] meshRenderers;
     private Color[] originalColors;
     private Coroutine flashCoroutine;
     private MaterialPropertyBlock propBlock;
-    private Animator animator; // YENİ: Ölme animasyonunu tetiklemek için animator referansı
-    private AudioSource audioSource; // YENİ: Ölme sesini çalmak için ses kaynağı referansı
+    private Animator animator;
+    private AudioSource audioSource;
 
     private void Start()
     {
@@ -40,7 +40,6 @@ public class PlayerHealth : MonoBehaviour
         UpdateHealthBar();
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
 
-        // Referansları alıyoruz
         animator = GetComponentInChildren<Animator>();
         audioSource = GetComponent<AudioSource>();
 
@@ -117,31 +116,41 @@ public class PlayerHealth : MonoBehaviour
     {
         isDead = true;
 
-        // YENİ: Ölme ses efekti oynatımı
         if (audioSource != null && deathSound != null)
         {
             audioSource.PlayOneShot(deathSound);
         }
 
-        // YENİ: Ölüm animasyonunun tetiklenmesi
         if (animator != null)
         {
             animator.SetTrigger("Die");
         }
-        
+
         DOVirtual.DelayedCall(2f, ShowDie, true).SetLink(gameObject);
     }
 
     public void ShowDie()
     {
-        Time.timeScale = 0; 
+        Time.timeScale = 0;
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
+
+        // KillManager'daki Oyun Sonu fonksiyonunu çağırarak süre ve skoru yazdırıyoruz
+        if (KillManager.Instance != null)
+        {
+            KillManager.Instance.TriggerGameOver();
+        }
     }
 
     public void RestartGame()
     {
         Time.timeScale = 1;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene(1); // 1 Numaralı Game sahnesini yeniden yükler
+    }
+
+    public void LoadMainMenu()
+    {
+        Time.timeScale = 1;
+        SceneManager.LoadScene(0); // 0 Numaralı Ana Menü sahnesini yükler
     }
 
     private void OnDestroy()
